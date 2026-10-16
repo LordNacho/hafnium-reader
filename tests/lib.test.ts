@@ -1,0 +1,124 @@
+/// <reference types="jest" />
+import { buildOpml, parseOpml } from '../src/lib/opml';
+import { parseDate, parseFeed } from '../src/lib/feed';
+import { absolutizeUrls, discoverFeedLinks, htmlToText } from '../src/lib/html';
+
+const OLD_READER_OPML = `<?xml version="1.0" encoding="UTF-8"?>
+<opml version="1.0">
+  <head><title>The Old Reader subscriptions</title></head>
+  <body>
+    <outline text="Tech" title="Tech">
+      <outline text="Ars &amp; Technica" title="Ars &amp; Technica" type="rss" xmlUrl="https://feeds.arstechnica.com/arstechnica/index" htmlUrl="https://arstechnica.com"/>
+      <outline text="HN" type="rss" xmlUrl="https://news.ycombinator.com/rss"/>
+    </outline>
+    <outline text="xkcd" title="xkcd" type="rss" xmlUrl="https://xkcd.com/atom.xml" htmlUrl="https://xkcd.com/"/>
+    <outline text="dup" type="rss" xmlUrl="https://xkcd.com/atom.xml"/>
+  </body>
+</opml>`;
+
+describe('opml', () => {
+  it('parses folders, titles and dedupes', () => {
+    expect(parseOpml(OLD_READER_OPML)).toEqual([
+      { url: 'https://feeds.arstechnica.com/arstechnica/index', title: 'Ars & Technica', siteUrl: 'https://arstechnica.com', folder: 'Tech' },
+      { url: 'https://news.ycombinator.com/rss', title: 'HN', siteUrl: null, folder: 'Tech' },
+      { url: 'https://xkcd.com/atom.xml', title: 'xkcd', siteUrl: 'https://xkcd.com/', folder: null },
+    ]);
+  });
+  it('round-trips through buildOpml', () => {
+    const feeds = parseOpml(OLD_READER_OPML);
+    expect(parseOpml(buildOpml(feeds))).toEqual(feeds);
+  });
+  it('rejects non-OPML', () => {
+    expect(() => parseOpml('<html><body/></html>')).toThrow(/OPML/);
+  });
+});
+
+describe('feed parsing', () => {
+  it('parses RSS 2.0 with content:encoded and CDATA', () => {
+    const f = parseFeed(
+      `<?xml version="1.0"?><rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/">
+      <channel><title>Blog &amp; Co</title><link>https://example.com/</link><atom:link href="https://example.com/feed" rel="self"/>
+      <item><title>First</title><link>/posts/1</link><guid isPermaLink="false">id-1</guid>
+        <pubDate>Tue, 10 Jun 2003 04:00:00 GMT</pubDate><dc:creator>Ann</dc:creator>
+        <description>short</description><content:encoded><![CDATA[<p>Full <b>body</b></p>]]></content:encoded></item>
+      <item><title>Second</title><link>https://example.com/2</link><description>&lt;p&gt;Escaped&lt;/p&gt;</description><pubDate>Wed, 11 Jun 2003 09:30:00 -0500</pubDate></item>
+      </channel></rss>`,
+      'https://example.com/feed',
+    );
+    expect(f.title).toBe('Blog & Co');
+    expect(f.siteUrl).toBe('https://example.com/');
+    expect(f.items[0]).toEqual({
+      guid: 'id-1',
+      url: 'https://example.com/posts/1',
+      title: 'First',
+      author: 'Ann',
+      publishedAt: Date.UTC(2003, 5, 10, 4),
+      content: '<p>Full <b>body</b></p>',
+    });
+    expect(f.items[1].guid).toBe('https://example.com/2');
+    expect(f.items[1].content).toBe('<p>Escaped</p>');
+    expect(f.items[1].publishedAt).toBe(Date.UTC(2003, 5, 11, 14, 30));
+  });
+
+  it('parses Atom with html, xhtml and text content', () => {
+    const f = parseFeed(
+      `<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom">
+      <title>xkcd.com</title><link href="https://xkcd.com/" rel="alternate"/><link href="https://xkcd.com/atom.xml" rel="self"/>
+      <entry><title>Comic</title><link href="https://xkcd.com/1/" rel="alternate"/><updated>2026-10-14T00:00:00Z</updated><id>https://xkcd.com/1/</id>
+        <summary type="html">&lt;img src="a.png" title="x &amp;amp; y"/&gt;</summary></entry>
+      <entry><title type="html">A &amp;amp; B</title><link href="/2/"/><published>2026-10-15T10:00:00+02:00</published><id>tag:2</id>
+        <author><name>Randall</name></author><content type="xhtml"><div xmlns="http://www.w3.org/1999/xhtml"><p>Hi</p></div></content></entry>
+      <entry><title>Plain</title><id>tag:3</id><content>1 &lt; 2</content></entry>
+    </feed>`,
+      'https://xkcd.com/atom.xml',
+    );
+    expect(f.siteUrl).toBe('https://xkcd.com/');
+    expect(f.items[0].content).toBe('<img src="a.png" title="x &amp; y"/>');
+    expect(f.items[0].publishedAt).toBe(Date.UTC(2026, 9, 14));
+    expect(f.items[1].url).toBe('https://xkcd.com/2/');
+    expect(f.items[1].author).toBe('Randall');
+    expect(f.items[1].content).toContain('<p>Hi</p>');
+    expect(f.items[1].publishedAt).toBe(Date.UTC(2026, 9, 15, 8));
+    expect(f.items[2].content).toBe('1 &lt; 2');
+    expect(f.items[2].url).toBeNull();
+  });
+
+  it('parses RSS 1.0 (RDF)', () => {
+    const f = parseFeed(
+      `<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://purl.org/rss/1.0/" xmlns:dc="http://purl.org/dc/elements/1.1/">
+      <channel rdf:about="https://s.org/"><title>Slash</title><link>https://s.org/</link></channel>
+      <item rdf:about="https://s.org/a"><title>A</title><link>https://s.org/a</link><dc:date>2026-01-02T03:04:05Z</dc:date></item>
+    </rdf:RDF>`,
+      'https://s.org/rss',
+    );
+    expect(f.title).toBe('Slash');
+    expect(f.items).toHaveLength(1);
+    expect(f.items[0].guid).toBe('https://s.org/a');
+    expect(f.items[0].publishedAt).toBe(Date.UTC(2026, 0, 2, 3, 4, 5));
+  });
+
+  it('rejects HTML pages', () => {
+    expect(() => parseFeed('<html><head></head></html>', 'https://x')).toThrow();
+  });
+
+  it('parses date variants', () => {
+    expect(parseDate('Mon, 5 Oct 26 12:00 EST')).toBe(Date.UTC(2026, 9, 5, 17));
+    expect(parseDate('2026-10-05')).toBe(Date.UTC(2026, 9, 5));
+    expect(parseDate('garbage')).toBeNull();
+  });
+});
+
+describe('html helpers', () => {
+  it('discovers feed links', () => {
+    const html = `<head><link rel="stylesheet" href="s.css"><link rel="alternate" type="application/rss+xml" title="RSS" href="/feed.xml">
+      <link type='application/atom+xml' rel='alternate' href='https://a.com/atom'></head>`;
+    expect(discoverFeedLinks(html, 'https://a.com/blog/')).toEqual(['https://a.com/feed.xml', 'https://a.com/atom']);
+  });
+  it('absolutizes relative URLs only', () => {
+    expect(absolutizeUrls(`<img src="/a.png"><a href='b'>x</a><a href="#top"></a><img src="data:x"><a href="mailto:z">`, 'https://s.com/p/q'))
+      .toBe(`<img src="https://s.com/a.png"><a href='https://s.com/p/b'>x</a><a href="#top"></a><img src="data:x"><a href="mailto:z">`);
+  });
+  it('makes text previews', () => {
+    expect(htmlToText('<p>Hello&nbsp;<b>world</b></p><script>x()</script>', 8)).toBe('Hello w…');
+  });
+});
