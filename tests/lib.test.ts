@@ -1,7 +1,7 @@
 /// <reference types="jest" />
 import { buildOpml, parseOpml } from '../src/lib/opml';
 import { parseDate, parseFeed } from '../src/lib/feed';
-import { absolutizeUrls, discoverFeedLinks, htmlToText } from '../src/lib/html';
+import { absolutizeUrls, discoverFeedLinks, htmlToText, stripMedia } from '../src/lib/html';
 
 const OLD_READER_OPML = `<?xml version="1.0" encoding="UTF-8"?>
 <opml version="1.0">
@@ -117,6 +117,10 @@ describe('html helpers', () => {
   it('absolutizes relative URLs only', () => {
     expect(absolutizeUrls(`<img src="/a.png"><a href='b'>x</a><a href="#top"></a><img src="data:x"><a href="mailto:z">`, 'https://s.com/p/q'))
       .toBe(`<img src="https://s.com/a.png"><a href='https://s.com/p/b'>x</a><a href="#top"></a><img src="data:x"><a href="mailto:z">`);
+  });
+  it('strips images and embedded media', () => {
+    expect(stripMedia('<p>a<img src="x.png"/>b</p><picture><source srcset="y"><img src="y"></picture><iframe src="v"></iframe><p>c</p>'))
+      .toBe('<p>ab</p><p>c</p>');
   });
   it('makes text previews', () => {
     expect(htmlToText('<p>Hello&nbsp;<b>world</b></p><script>x()</script>', 8)).toBe('Hello w…');

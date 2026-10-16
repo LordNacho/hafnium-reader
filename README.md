@@ -8,6 +8,7 @@ An ad-free RSS/Atom reader for iOS and Android built with Expo (SDK 58). Import 
 - **Offline reading** — feed content is saved in SQLite. Articles open in a clean, dark-mode-aware reader with no network needed.
 - **Limits you control** — keep the newest 25–500 articles per feed and/or up to 7–365 days. Starred articles are never pruned.
 - **Auto-refresh** — on app open (if stale for 15+ min), plus periodic background refresh (Android WorkManager / iOS BGTaskScheduler), optionally Wi-Fi only.
+- **Appearance** — System / Light / Dark / Sepia theme, text size (85–150%, on top of the phone's own setting), sans or serif reading font, line spacing, and an images on/off switch, with a live preview in Settings.
 - RSS 2.0, RSS 1.0 (RDF) and Atom; conditional GET (ETag / Last-Modified) to save data.
 - Add a feed by URL or by a site's homepage (feed autodiscovery).
 - Unread/all filter, mark all read, star, prev/next, share, open original in an in-app browser.

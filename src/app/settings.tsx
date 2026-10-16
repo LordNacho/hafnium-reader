@@ -3,20 +3,27 @@ import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { LINE_HEIGHTS, updateAppearance, useAppearance } from '../appearance';
 import { configureBackgroundRefresh } from '../background';
 import { deleteReadArticles, storageStats } from '../db';
 import { notifyDataChanged, useDataVersion } from '../events';
 import { buildOpml, parseOpml } from '../lib/opml';
-import { DEFAULT_SETTINGS, loadSettings, saveSetting, type Settings } from '../settings';
+import { DEFAULT_SETTINGS, loadSettings, saveSetting, type Settings, type ThemeName } from '../settings';
 import { exportFeeds, importFeeds, prune, syncAll } from '../sync';
-import { useColors } from '../theme';
+import { SERIF_FONT, useColors, useFontSize } from '../theme';
 
+const THEMES: ThemeName[] = ['system', 'light', 'dark', 'sepia'];
+const TEXT_SCALES = [0.85, 1, 1.15, 1.3, 1.5];
+const FONTS: Settings['readerFont'][] = ['sans', 'serif'];
+const SPACINGS: Settings['lineSpacing'][] = ['compact', 'normal', 'relaxed'];
+const capitalize = (s: string) => s[0].toUpperCase() + s.slice(1);
 const ARTICLE_LIMITS = [25, 50, 100, 200, 500];
 const AGE_LIMITS = [7, 14, 30, 90, 365];
 const INTERVALS = [15, 30, 60, 180, 360, 720];
 
 export default function SettingsScreen() {
   const colors = useColors();
+  const appearance = useAppearance();
   const version = useDataVersion();
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [stats, setStats] = useState<Awaited<ReturnType<typeof storageStats>> | null>(null);
@@ -72,6 +79,22 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.container}>
+      {section('Appearance')}
+      <View style={[styles.card, { backgroundColor: colors.surface }]}>
+        <Choice label="Theme" options={THEMES} value={appearance.theme} onChange={(v) => updateAppearance('theme', v)} format={capitalize} />
+        <Choice
+          label="Text size"
+          options={TEXT_SCALES}
+          value={appearance.textScale}
+          onChange={(v) => updateAppearance('textScale', v)}
+          format={(v) => `${Math.round(v * 100)}%`}
+        />
+        <Choice label="Reading font" options={FONTS} value={appearance.readerFont} onChange={(v) => updateAppearance('readerFont', v)} format={capitalize} />
+        <Choice label="Line spacing" options={SPACINGS} value={appearance.lineSpacing} onChange={(v) => updateAppearance('lineSpacing', v)} format={capitalize} />
+        <ToggleRow label="Show images in articles" value={appearance.showImages} onChange={(v) => updateAppearance('showImages', v)} />
+        <ReaderPreview />
+      </View>
+
       {section('Subscriptions')}
       <View style={[styles.card, { backgroundColor: colors.surface }]}>
         <ActionRow label="Import OPML…" detail="From The Old Reader, Feedly, Inoreader, etc." onPress={importOpml} />
@@ -146,7 +169,34 @@ function ToggleRow({ label, value, onChange }: { label: string; value: boolean; 
   );
 }
 
-function Choice({
+/** A sample paragraph styled like the reader, so appearance changes are visible immediately. */
+function ReaderPreview() {
+  const colors = useColors();
+  const fs = useFontSize();
+  const { readerFont, lineSpacing } = useAppearance();
+  const size = fs(18);
+  return (
+    <View style={[styles.preview, { backgroundColor: colors.background, borderColor: colors.border }]}>
+      <Text style={{ color: colors.text, fontSize: Math.round(size * 1.2), fontWeight: '700', fontFamily: readerFont === 'serif' ? SERIF_FONT : undefined }}>
+        The quick brown fox
+      </Text>
+      <Text style={{ color: colors.muted, fontSize: fs(12), marginVertical: 4 }}>Preview · 2 min read</Text>
+      <Text
+        style={{
+          color: colors.text,
+          fontSize: size,
+          lineHeight: Math.round(size * LINE_HEIGHTS[lineSpacing]),
+          fontFamily: readerFont === 'serif' ? SERIF_FONT : undefined,
+        }}
+      >
+        Articles are saved on your phone, so you can read them anywhere — on a plane, in the{' '}
+        <Text style={{ color: colors.accent, textDecorationLine: 'underline' }}>underground</Text>, or with no signal at all.
+      </Text>
+    </View>
+  );
+}
+
+function Choice<T extends string | number>({
   label,
   unit,
   options,
@@ -155,17 +205,17 @@ function Choice({
   format = (v) => String(v),
 }: {
   label: string;
-  unit: string;
-  options: number[];
-  value: number;
-  onChange: (v: number) => void;
-  format?: (v: number) => string;
+  unit?: string;
+  options: T[];
+  value: T;
+  onChange: (v: T) => void;
+  format?: (v: T) => string;
 }) {
   const colors = useColors();
   return (
     <View style={styles.row}>
       <Text style={{ color: colors.text, fontSize: 16, marginBottom: 8 }}>
-        {label} <Text style={{ color: colors.muted }}>({unit})</Text>
+        {label} {unit && <Text style={{ color: colors.muted }}>({unit})</Text>}
       </Text>
       <View style={styles.chips}>
         {options.map((o) => {
@@ -194,5 +244,6 @@ const styles = StyleSheet.create({
   note: { fontSize: 13, lineHeight: 18, paddingHorizontal: 14, paddingBottom: 6 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { borderWidth: 1, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 5 },
+  preview: { margin: 14, marginTop: 6, padding: 16, borderRadius: 8, borderWidth: StyleSheet.hairlineWidth },
   busy: { flexDirection: 'row', gap: 10, alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10 },
 });

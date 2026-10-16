@@ -1,17 +1,18 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, Share, StyleSheet, Text, useColorScheme, View } from 'react-native';
+import { PixelRatio, Pressable, Share, StyleSheet, Text, View } from 'react-native';
 import { WebView, type WebViewNavigation } from 'react-native-webview';
+import { LINE_HEIGHTS, useAppearance, type Appearance } from '../../appearance';
 import { getArticle, setRead, setStarred, type Article } from '../../db';
 import { notifyDataChanged } from '../../events';
-import { escapeHtml } from '../../lib/html';
-import { useColors } from '../../theme';
+import { escapeHtml, stripMedia } from '../../lib/html';
+import { useColors, type Colors } from '../../theme';
 
 export default function ArticleScreen() {
   const { id, ids } = useLocalSearchParams<{ id: string; ids?: string }>();
   const colors = useColors();
-  const scheme = useColorScheme();
+  const appearance = useAppearance();
   const [article, setArticle] = useState<Article | null>(null);
 
   useEffect(() => {
@@ -36,7 +37,7 @@ export default function ArticleScreen() {
     if (next) router.replace({ pathname: '/article/[id]', params: { id: next, ids } });
   };
 
-  const html = useMemo(() => (article ? renderArticle(article, scheme === 'dark') : ''), [article, scheme]);
+  const html = useMemo(() => (article ? renderArticle(article, colors, appearance) : ''), [article, colors, appearance]);
 
   if (!article) return <View style={{ flex: 1, backgroundColor: colors.background }} />;
 
@@ -108,31 +109,39 @@ function ToolbarButton({ label, onPress, disabled }: { label: string; onPress: (
   );
 }
 
-function renderArticle(a: Article, dark: boolean): string {
-  const fg = dark ? '#eceef1' : '#16181d';
-  const bg = dark ? '#111214' : '#ffffff';
-  const muted = dark ? '#9aa0a8' : '#6b7280';
-  const link = dark ? '#ff8a4c' : '#d9480f';
+const SANS_STACK = "-apple-system, system-ui, Roboto, 'Helvetica Neue', sans-serif";
+const SERIF_STACK = "Georgia, 'Iowan Old Style', 'Noto Serif', 'Times New Roman', serif";
+
+function renderArticle(a: Article, c: Colors, ap: Appearance): string {
+  // The WebView doesn't follow the phone's text-size setting on its own, so apply it here too.
+  const fontSize = (18 * ap.textScale * PixelRatio.getFontScale()).toFixed(1);
+  const family = ap.readerFont === 'serif' ? SERIF_STACK : SANS_STACK;
   const date = new Date(a.sort_at).toLocaleString();
   const byline = [a.feed_title, a.author, date].filter(Boolean).map((s) => escapeHtml(String(s))).join(' · ');
+  const content = ap.showImages ? a.content : stripMedia(a.content);
   return `<!doctype html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="${c.isDark ? 'dark' : 'light'}">
 <style>
   html { -webkit-text-size-adjust: 100%; }
-  body { margin: 0; padding: 20px 18px 48px; background: ${bg}; color: ${fg};
-         font: 18px/1.6 -apple-system, system-ui, Roboto, sans-serif; word-wrap: break-word; }
+  body { padding: 20px 18px 48px; background: ${c.background}; color: ${c.text};
+         font-family: ${family}; font-size: ${fontSize}px; line-height: ${LINE_HEIGHTS[ap.lineSpacing]};
+         word-wrap: break-word; max-width: 42em; margin: 0 auto; }
   h1.title { font-size: 1.45em; line-height: 1.25; margin: 0 0 6px; }
-  .byline { color: ${muted}; font-size: 0.8em; margin-bottom: 24px; }
-  a { color: ${link}; }
+  .byline { color: ${c.muted}; font-family: ${SANS_STACK}; font-size: 0.75em; margin-bottom: 24px; }
+  a { color: ${c.accent}; }
   img, video, iframe, figure, table { max-width: 100% !important; height: auto; }
+  ${c.isDark ? 'img { opacity: 0.9; }' : ''}
   figure { margin: 1em 0; }
-  pre, code { font-size: 0.85em; background: ${dark ? '#1b1d21' : '#f4f5f7'}; border-radius: 4px; }
+  figcaption { color: ${c.muted}; font-size: 0.8em; }
+  pre, code { font-size: 0.85em; background: ${c.surface}; border-radius: 4px; }
   pre { padding: 12px; overflow-x: auto; }
-  blockquote { margin: 1em 0; padding-left: 1em; border-left: 3px solid ${muted}; color: ${muted}; }
+  blockquote { margin: 1em 0; padding-left: 1em; border-left: 3px solid ${c.border}; color: ${c.muted}; }
+  hr { border: 0; border-top: 1px solid ${c.border}; }
 </style></head><body>
 <h1 class="title">${escapeHtml(a.title)}</h1>
 <div class="byline">${byline}</div>
-<div class="content">${a.content || `<p style="color:${muted}">This feed only provides a headline. Tap “Open site” to read the full article.</p>`}</div>
+<div class="content">${content || `<p style="color:${c.muted}">This feed only provides a headline. Tap “Open site” to read the full article.</p>`}</div>
 </body></html>`;
 }
 

@@ -55,6 +55,13 @@ export function resolveUrl(href: string, base?: string): string {
   }
 }
 
+/** Remove images and embedded media so nothing is downloaded when images are turned off. */
+export function stripMedia(html: string): string {
+  return html
+    .replace(/<(picture|video|audio|iframe|object|svg)\b[\s\S]*?<\/\1>/gi, '')
+    .replace(/<(img|source|embed|iframe)\b[^>]*>/gi, '');
+}
+
 /** Rewrite relative src/href attributes so stored HTML renders without a base URL. */
 export function absolutizeUrls(html: string, base: string | null): string {
   if (!base) return html;

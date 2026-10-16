@@ -1,6 +1,8 @@
-import { useColorScheme } from 'react-native';
+import { Platform, useColorScheme } from 'react-native';
+import { useAppearance } from './appearance';
 
 const light = {
+  isDark: false,
   background: '#ffffff',
   surface: '#f4f5f7',
   text: '#16181d',
@@ -11,7 +13,10 @@ const light = {
   badge: '#e9ecef',
 };
 
-const dark: typeof light = {
+export type Colors = typeof light;
+
+const dark: Colors = {
+  isDark: true,
   background: '#111214',
   surface: '#1b1d21',
   text: '#eceef1',
@@ -22,11 +27,33 @@ const dark: typeof light = {
   badge: '#2a2d33',
 };
 
-export type Colors = typeof light;
+const sepia: Colors = {
+  isDark: false,
+  background: '#f4ecd8',
+  surface: '#ebe0c6',
+  text: '#433422',
+  muted: '#7a6a55',
+  border: '#d9cbb0',
+  accent: '#a0522d',
+  danger: '#b02a2a',
+  badge: '#e2d4b5',
+};
 
 export function useColors(): Colors {
-  return useColorScheme() === 'dark' ? dark : light;
+  const { theme } = useAppearance();
+  const system = useColorScheme();
+  if (theme === 'sepia') return sepia;
+  if (theme === 'dark' || (theme === 'system' && system === 'dark')) return dark;
+  return light;
 }
+
+/** Scale a base font size by the user's text-size setting (the OS setting is applied on top by <Text>). */
+export function useFontSize(): (base: number) => number {
+  const { textScale } = useAppearance();
+  return (base) => Math.round(base * textScale);
+}
+
+export const SERIF_FONT = Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' });
 
 export function relativeTime(ms: number): string {
   const diff = Date.now() - ms;

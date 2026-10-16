@@ -5,11 +5,12 @@ import { listArticles, markAllRead, type ArticleFilter, type ArticleSummary } fr
 import { useDataVersion } from '../events';
 import { loadSettings, saveSetting } from '../settings';
 import { syncAll } from '../sync';
-import { relativeTime, useColors } from '../theme';
+import { relativeTime, useColors, useFontSize } from '../theme';
 
 export default function ArticlesScreen() {
   const params = useLocalSearchParams<{ feedId?: string; folder?: string; starred?: string; title?: string }>();
   const colors = useColors();
+  const fs = useFontSize();
   const version = useDataVersion();
   const [articles, setArticles] = useState<ArticleSummary[]>([]);
   const [unreadOnly, setUnreadOnly] = useState<boolean | null>(null);
@@ -80,17 +81,23 @@ export default function ArticlesScreen() {
             style={({ pressed }) => [styles.row, { borderColor: colors.border, opacity: pressed ? 0.6 : 1 }]}
           >
             <View style={styles.meta}>
-              <Text style={[styles.metaText, { color: colors.muted }]} numberOfLines={1}>
+              <Text style={[styles.metaText, { color: colors.muted, fontSize: fs(12) }]} numberOfLines={1}>
                 {item.is_starred ? '★ ' : ''}
                 {filter.feedId ? '' : item.feed_title + ' · '}
                 {relativeTime(item.sort_at)}
               </Text>
             </View>
-            <Text style={[styles.title, { color: item.is_read ? colors.muted : colors.text, fontWeight: item.is_read ? '400' : '600' }]} numberOfLines={3}>
+            <Text
+              style={[
+                styles.title,
+                { color: item.is_read ? colors.muted : colors.text, fontWeight: item.is_read ? '400' : '600', fontSize: fs(16), lineHeight: fs(21) },
+              ]}
+              numberOfLines={3}
+            >
               {item.title}
             </Text>
             {!!item.preview && (
-              <Text style={[styles.preview, { color: colors.muted }]} numberOfLines={2}>
+              <Text style={[styles.preview, { color: colors.muted, fontSize: fs(14), lineHeight: fs(19) }]} numberOfLines={2}>
                 {item.preview}
               </Text>
             )}

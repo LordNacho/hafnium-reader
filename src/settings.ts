@@ -12,7 +12,17 @@ export interface Settings {
   wifiOnly: boolean;
   /** Article lists hide read articles. */
   unreadOnly: boolean;
+  theme: ThemeName;
+  /** Multiplier on top of the phone's own text-size setting. */
+  textScale: number;
+  readerFont: 'sans' | 'serif';
+  lineSpacing: 'compact' | 'normal' | 'relaxed';
+  showImages: boolean;
 }
+
+export type ThemeName = 'system' | 'light' | 'dark' | 'sepia';
+export type AppearanceKey = 'theme' | 'textScale' | 'readerFont' | 'lineSpacing' | 'showImages';
+export const APPEARANCE_KEYS: AppearanceKey[] = ['theme', 'textScale', 'readerFont', 'lineSpacing', 'showImages'];
 
 export const DEFAULT_SETTINGS: Settings = {
   maxArticlesPerFeed: 100,
@@ -21,6 +31,11 @@ export const DEFAULT_SETTINGS: Settings = {
   backgroundRefresh: true,
   wifiOnly: false,
   unreadOnly: true,
+  theme: 'system',
+  textScale: 1,
+  readerFont: 'sans',
+  lineSpacing: 'normal',
+  showImages: true,
 };
 
 export async function loadSettings(): Promise<Settings> {

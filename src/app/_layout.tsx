@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { AppState } from 'react-native';
 // Importing background.ts also defines the refresh task at module scope, which the OS needs on wake-up.
+import { initAppearance } from '../appearance';
 import { configureBackgroundRefresh } from '../background';
 import { loadSettings } from '../settings';
 import { syncAll } from '../sync';
@@ -14,6 +15,7 @@ export default function RootLayout() {
   const colors = useColors();
 
   useEffect(() => {
+    initAppearance();
     configureBackgroundRefresh();
     let lastSync = 0;
     const refreshIfStale = async () => {
@@ -31,7 +33,7 @@ export default function RootLayout() {
 
   return (
     <>
-      <StatusBar style="auto" />
+      <StatusBar style={colors.isDark ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: colors.background },

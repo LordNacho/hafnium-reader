@@ -4,7 +4,7 @@ import { Alert, Pressable, RefreshControl, SectionList, StyleSheet, Text, View }
 import { deleteFeed, listFeeds, markAllRead, type Feed } from '../db';
 import { useDataVersion } from '../events';
 import { syncAll } from '../sync';
-import { relativeTime, useColors } from '../theme';
+import { relativeTime, useColors, useFontSize } from '../theme';
 
 type Row =
   | { kind: 'smart'; key: string; title: string; count: number; params: Record<string, string> }
@@ -12,6 +12,7 @@ type Row =
 
 export default function FeedsScreen() {
   const colors = useColors();
+  const fs = useFontSize();
   const version = useDataVersion();
   const [feeds, setFeeds] = useState<Feed[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -108,7 +109,7 @@ export default function FeedsScreen() {
                 onPress={() => router.push({ pathname: '/articles', params: item.params })}
                 style={({ pressed }) => [styles.row, { borderColor: colors.border, opacity: pressed ? 0.6 : 1 }]}
               >
-                <Text style={[styles.title, styles.smart, { color: colors.text }]}>{item.title}</Text>
+                <Text style={[styles.title, styles.smart, { color: colors.text, fontSize: fs(16) }]}>{item.title}</Text>
                 {item.count > 0 && <Badge n={item.count} />}
               </Pressable>
             );
@@ -121,7 +122,7 @@ export default function FeedsScreen() {
               style={({ pressed }) => [styles.row, { borderColor: colors.border, opacity: pressed ? 0.6 : 1 }]}
             >
               <View style={{ flex: 1 }}>
-                <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
+                <Text style={[styles.title, { color: colors.text, fontSize: fs(16) }]} numberOfLines={1}>
                   {f.title}
                 </Text>
                 {f.last_error ? (
