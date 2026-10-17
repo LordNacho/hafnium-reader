@@ -1,7 +1,7 @@
 /// <reference types="jest" />
 import { buildOpml, parseOpml } from '../src/lib/opml';
 import { parseDate, parseFeed } from '../src/lib/feed';
-import { absolutizeUrls, discoverFeedLinks, htmlToText, stripMedia } from '../src/lib/html';
+import { absolutizeUrls, discoverFeedLinks, htmlToText, httpsVariant, stripMedia, upgradeInsecureMedia } from '../src/lib/html';
 
 const OLD_READER_OPML = `<?xml version="1.0" encoding="UTF-8"?>
 <opml version="1.0">
@@ -117,6 +117,13 @@ describe('html helpers', () => {
   it('absolutizes relative URLs only', () => {
     expect(absolutizeUrls(`<img src="/a.png"><a href='b'>x</a><a href="#top"></a><img src="data:x"><a href="mailto:z">`, 'https://s.com/p/q'))
       .toBe(`<img src="https://s.com/a.png"><a href='https://s.com/p/b'>x</a><a href="#top"></a><img src="data:x"><a href="mailto:z">`);
+  });
+  it('prefers https', () => {
+    expect(httpsVariant('http://a.com/feed')).toBe('https://a.com/feed');
+    expect(httpsVariant('HTTP://a.com/')).toBe('https://a.com/');
+    expect(httpsVariant('https://a.com/')).toBeNull();
+    expect(upgradeInsecureMedia(`<img src="http://a.com/x.png" srcset="http://a.com/1.png 1x, http://a.com/2.png 2x"><a href="http://a.com">`))
+      .toBe(`<img src="https://a.com/x.png" srcset="https://a.com/1.png 1x, https://a.com/2.png 2x"><a href="http://a.com">`);
   });
   it('strips images and embedded media', () => {
     expect(stripMedia('<p>a<img src="x.png"/>b</p><picture><source srcset="y"><img src="y"></picture><iframe src="v"></iframe><p>c</p>'))

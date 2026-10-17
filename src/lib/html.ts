@@ -55,6 +55,18 @@ export function resolveUrl(href: string, base?: string): string {
   }
 }
 
+/** The https form of a plain-http address, or null if it isn't plain http. */
+export function httpsVariant(url: string): string | null {
+  return /^http:\/\//i.test(url) ? 'https://' + url.slice(7) : null;
+}
+
+/** Load article images over https; phones block plain-http requests by default. */
+export function upgradeInsecureMedia(html: string): string {
+  return html.replace(/\b(src|srcset|poster)\s*=\s*(["'])([^"']*)\2/gi, (_m, attr: string, q: string, value: string) =>
+    `${attr}=${q}${value.replace(/\bhttp:\/\//gi, 'https://')}${q}`,
+  );
+}
+
 /** Remove images and embedded media so nothing is downloaded when images are turned off. */
 export function stripMedia(html: string): string {
   return html

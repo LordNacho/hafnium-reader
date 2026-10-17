@@ -1,7 +1,7 @@
 import { getDb } from './db';
 import { notifyDataChanged } from './events';
 import { looksLikeFeed, parseFeed, type ParsedFeed } from './lib/feed';
-import { absolutizeUrls, discoverFeedLinks, htmlToText } from './lib/html';
+import { absolutizeUrls, discoverFeedLinks, htmlToText, httpsVariant } from './lib/html';
 import type { OpmlFeed } from './lib/opml';
 import { loadSettings, type Settings } from './settings';
 
@@ -20,6 +20,26 @@ async function fetchWithTimeout(url: string, headers: Record<string, string> = {
     return await fetch(url, { headers: { ...HEADERS, ...headers }, signal: controller.signal });
   } finally {
     clearTimeout(timer);
+  }
+}
+
+/**
+ * Plain-http addresses are tried over https first: most sites serve both, and phones block
+ * insecure requests by default. Falls back to http only when https doesn't answer.
+ */
+async function fetchPreferHttps(url: string, headers: Record<string, string> = {}): Promise<{ res: Response; url: string }> {
+  const secure = httpsVariant(url);
+  if (!secure) return { res: await fetchWithTimeout(url, headers), url };
+  try {
+    const res = await fetchWithTimeout(secure, headers);
+    if (res.ok || res.status === 304) return { res, url: secure };
+  } catch {
+    // no https version; try the original address
+  }
+  try {
+    return { res: await fetchWithTimeout(url, headers), url };
+  } catch {
+    throw new Error('This site has no secure (https) version, and its insecure address could not be loaded');
   }
 }
 
@@ -82,13 +102,17 @@ async function syncFeed(
   if (feed.etag) headers['If-None-Match'] = feed.etag;
   if (feed.last_modified) headers['If-Modified-Since'] = feed.last_modified;
 
-  const res = await fetchWithTimeout(feed.url, headers);
+  const { res, url } = await fetchPreferHttps(feed.url, headers);
+  if (url !== feed.url) {
+    // Remember the secure address; OR IGNORE keeps the old one if that address is already subscribed.
+    await db.runAsync('UPDATE OR IGNORE feeds SET url = ? WHERE id = ?', url, feed.id);
+  }
   if (res.status === 304) {
     await db.runAsync('UPDATE feeds SET last_fetched_at = ?, last_error = NULL WHERE id = ?', Date.now(), feed.id);
     return 0;
   }
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const parsed = parseFeed(await res.text(), feed.url);
+  const parsed = parseFeed(await res.text(), url);
   const added = await storeItems(feed.id, parsed, settings);
   await db.runAsync(
     `UPDATE feeds SET last_fetched_at = ?, last_error = NULL, etag = ?, last_modified = ?,
@@ -172,16 +196,14 @@ function normalizeUrl(input: string): string {
 
 /** Subscribe to a feed URL, or a web page that advertises one. Returns the new feed id. */
 export async function addFeed(input: string, folder: string | null = null): Promise<number> {
-  let url = normalizeUrl(input);
-  let res = await fetchWithTimeout(url);
+  let { res, url } = await fetchPreferHttps(normalizeUrl(input));
   if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
   let body = await res.text();
 
   if (!looksLikeFeed(body)) {
     const candidates = discoverFeedLinks(body, res.url || url);
     if (!candidates.length) throw new Error('No RSS or Atom feed found at that address');
-    url = candidates[0];
-    res = await fetchWithTimeout(url);
+    ({ res, url } = await fetchPreferHttps(candidates[0]));
     if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
     body = await res.text();
   }

@@ -2,7 +2,7 @@
 
 ## App Name
 
-{{NAME}}: RSS Reader
+{{NAME}}: RSS Feeds
 
 ## Short Description
 
@@ -70,7 +70,7 @@ News aggregator, Blogs, Magazines, Reading (pick from Play Console's tag list; u
 
 ## Content rating notes
 
-IARC questionnaire: category "Reference, News, or Educational". No violence, sexual content, profanity, drugs or gambling created by the app; no user-to-user interaction or chat; no sharing of the user's location; no digital purchases. The app shows articles from feeds the user adds and can open the original web page in an in-app browser, so answer the questions about unrestricted internet or web access accordingly. Not directed at children (target audience 18+ or 13+, not under 13).
+IARC questionnaire: category "Reference, News, or Educational". No violence, sexual content, profanity, drugs or gambling created by the app; no user-to-user interaction or chat; no sharing of the user's location; no digital purchases. The app shows articles from feeds the user adds and can open an article's own page in the system browser view; it has no general web browsing. Decision: answer No to the unrestricted web access question. Not directed at children (target audience 13+, not under 13).
 
 ## Ads
 

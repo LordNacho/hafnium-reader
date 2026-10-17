@@ -50,6 +50,10 @@ h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: v
 .wall.dark .dummy { opacity: .35; }
 .app span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 
+.facts { margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px 24px; }
+.facts div { min-width: 0; }
+.facts dt { font-weight: 600; }
+.facts dd { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
 .next { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; }
 .next p { margin: 0 0 8px; }
 .next p:last-child { margin: 0; color: var(--muted); }
@@ -58,12 +62,29 @@ h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: v
 
 <div class="wrap">
   <header>
-    <h1>Icon drafts</h1>
-    <p>Six directions for the RSS reader’s icon. Each is shown in the iPhone mask, in Android’s round crop (which only shows the middle two-thirds), at small sizes, and on home screens. Pick one by letter, or mix parts of two.</p>
+    <h1>Hafnium Reader icons</h1>
+    <p>Round two draws on hafnium and Copenhagen. Each icon is shown in the iPhone mask, in Android’s round crop (which only shows the middle two-thirds), at small sizes, and on home screens. Pick one by letter, or mix parts of two.</p>
   </header>
 
   <section>
-    <h2>Concepts</h2>
+    <h2>Material to draw on</h2>
+    <dl class="facts">
+      <div><dt>Element 72, Hf</dt><dd>A silvery, lustrous metal. Its periodic-table tile (72 · Hf · 178.49) is a ready-made badge.</dd></div>
+      <div><dt>Named after Copenhagen</dt><dd>Hafnia is the Latin name for Copenhagen, and <i>havn</i> means harbour: København is the “merchants’ harbour”. Things arrive there and are kept safe.</dd></div>
+      <div><dt>Found in Copenhagen, 1923</dt><dd>Dirk Coster and George de Hevesy discovered it at Niels Bohr’s institute, guided by Bohr’s atomic theory. The arcs of a Bohr atom echo the RSS feed waves.</dd></div>
+      <div><dt>Electron shells 2 · 8 · 18 · 32 · 10 · 2</dt><dd>Six shells around the nucleus. Three of them, cut to a quarter, are the feed symbol.</dd></div>
+      <div><dt>Copenhagen’s colours</dt><dd>Nyhavn’s ochre, red and blue houses on the water; copper spires gone verdigris green; the corkscrew spire of the Church of Our Saviour.</dd></div>
+      <div><dt>Hidden in plain sight</dt><dd>Hafnium oxide insulates the transistors in modern phone chips, so it is already inside the phone the app runs on. It hides in zirconium ore and was missed for decades.</dd></div>
+    </dl>
+  </section>
+
+  <section>
+    <h2>Round two: Hafnium and Copenhagen</h2>
+    <div class="grid" id="grid2"></div>
+  </section>
+
+  <section>
+    <h2>Round one</h2>
     <div class="grid" id="grid"></div>
   </section>
 
@@ -77,12 +98,18 @@ h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: v
 
   <section class="next">
     <p><strong>What happens after you pick.</strong> I’ll refine the chosen draft, then export every size the stores and phones need: the 1024px App Store icon, the 512px Play Store icon, Android’s separate foreground, background and monochrome layers, the splash screen and the Play feature graphic.</p>
-    <p>Names are suggestions that suit each drawing. Any icon can go with any name.</p>
+    <p>On the home screen the label truncates to “Hafnium Re…” on most phones. A shorter label such as “Hafnium” can be set for the home screen while the store keeps the full name.</p>
   </section>
 </div>
 
 <script>
 (() => {
+  const ROUND2 = [
+    { id: 'g-element', letter: 'G', title: 'Element tile', name: 'Hafnium Reader', why: 'The periodic-table tile for hafnium, 72 · Hf, on brushed metal, with the feed mark where the atomic mass would sit. Clear at every size.' },
+    { id: 'h-bohr', letter: 'H', title: 'Bohr feed', name: 'Hafnium Reader', why: 'A Bohr atom whose orbits, cut to a quarter, become the feed waves. Copenhagen physics and RSS in one mark.' },
+    { id: 'i-harbour', letter: 'I', title: 'Harbour', name: 'Hafnium Reader', why: 'Nyhavn’s gabled houses on the water with the feed rising above: Hafnia, the harbour where articles arrive.' },
+    { id: 'j-spire', letter: 'J', title: 'Copper spire', name: 'Hafnium Reader', why: 'A verdigris spire, like the Church of Our Saviour’s, sending out the feed waves. Copenhagen’s green and cream.' },
+  ];
   const CONCEPTS = [
     { id: 'a-lantern', letter: 'A', title: 'Lantern', name: 'Lantern', why: 'A lit lantern: reading that works when the network goes dark. Warm and distinctive on any wallpaper.' },
     { id: 'b-quietfeed', letter: 'B', title: 'Quiet signal', name: 'Quietfeed', why: 'The familiar feed waves, fading out. Calm, on the app’s sepia paper colour. Reads clearly as RSS.' },
@@ -94,7 +121,7 @@ h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: v
   const src = (c) => `icons/${c.id}.svg`;
   const esc = (s) => s.replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
 
-  document.getElementById('grid').innerHTML = CONCEPTS.map((c) => `
+  const card = (c) => `
     <article class="concept" id="${c.letter}">
       <div class="concept-head"><span class="letter">${c.letter}</span><h3>${esc(c.title)}</h3><span class="name">${esc(c.name)}</span></div>
       <div class="masks">
@@ -105,15 +132,17 @@ h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: v
         ${[60, 40, 29].map((s) => `<div class="mask"><div class="ios" style="width:${s}px;height:${s}px"><img src="${src(c)}" alt=""></div>${s}px</div>`).join('')}
       </div>
       <p class="why">${esc(c.why)}</p>
-    </article>`).join('');
+    </article>`;
+  document.getElementById('grid2').innerHTML = ROUND2.map(card).join('');
+  document.getElementById('grid').innerHTML = CONCEPTS.map(card).join('');
 
   const dummies = ['Maps', 'Notes', 'Music', 'Photos', 'Mail', 'Clock'];
+  // Round two on the home screens, labelled with the real name so you can see how the label truncates.
   const wall = (el) => {
     let html = '';
-    CONCEPTS.forEach((c, i) => {
-      const label = c.name === 'Any name' ? c.title : c.name;
-      html += `<div class="app"><div class="ios"><img src="${src(c)}" alt="${esc(label)}"></div><span>${c.letter} · ${esc(label)}</span></div>`;
-      html += `<div class="app"><div class="dummy d${(i % 3) + 1}"></div><span>${dummies[i]}</span></div>`;
+    [...ROUND2, CONCEPTS[1]].forEach((c, i) => {
+      html += `<div class="app"><div class="ios"><img src="${src(c)}" alt="${c.letter}: ${esc(c.title)}"></div><span>Hafnium Reader</span></div>`;
+      if (i < 4) html += `<div class="app"><div class="dummy d${(i % 3) + 1}"></div><span>${dummies[i]}</span></div>`;
     });
     el.innerHTML = html;
   };

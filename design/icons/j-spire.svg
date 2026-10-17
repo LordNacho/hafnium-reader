@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5fae99"/>
+      <stop offset="1" stop-color="#2c665a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <g transform="translate(40 10)">
+  <!-- feed waves broadcast from the spire tip -->
+  <g fill="none" stroke="#f4ecd8" stroke-width="40" stroke-linecap="round">
+    <path d="M471 229 A100 100 0 0 1 471 371"/>
+    <path d="M527 173 A180 180 0 0 1 527 427" opacity=".55"/>
+  </g>
+  <!-- copper spire with its spiral band -->
+  <path d="M350 660 L400 316 L450 660 Z" fill="#f4ecd8"/>
+  <g stroke="#2c665a" stroke-width="12" stroke-linecap="round">
+    <path d="M362 600 L440 576 M370 530 L432 510 M379 460 L423 446 M388 395 L414 386"/>
+  </g>
+  <circle cx="400" cy="300" r="20" fill="#ff8a4c"/>
+  <!-- tower -->
+  <rect x="340" y="660" width="120" height="380" fill="#f4ecd8"/>
+  <rect x="330" y="650" width="140" height="24" rx="6" fill="#e6dcc4"/>
+  <g fill="#2c665a">
+    <path d="M378 760 v-34 a22 22 0 0 1 44 0 v34 Z"/>
+    <rect x="384" y="820" width="32" height="60" rx="16"/>
+  </g>
+  </g>
+</svg>

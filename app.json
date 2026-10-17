@@ -1,21 +1,21 @@
 {
   "expo": {
-    "name": "Feeds",
-    "slug": "rss-reader",
-    "scheme": "rssreader",
+    "name": "Hafnium Reader",
+    "slug": "hafnium-reader",
+    "scheme": "hafniumreader",
     "version": "1.0.0",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.charlesphan1980.feeds",
+      "bundleIdentifier": "ltd.hafnium.reader",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "com.charlesphan1980.feeds",
+      "package": "ltd.hafnium.reader",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",

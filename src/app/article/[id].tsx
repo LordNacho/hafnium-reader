@@ -6,7 +6,7 @@ import { WebView, type WebViewNavigation } from 'react-native-webview';
 import { LINE_HEIGHTS, useAppearance, type Appearance } from '../../appearance';
 import { getArticle, setRead, setStarred, type Article } from '../../db';
 import { notifyDataChanged } from '../../events';
-import { escapeHtml, stripMedia } from '../../lib/html';
+import { escapeHtml, stripMedia, upgradeInsecureMedia } from '../../lib/html';
 import { useColors, type Colors } from '../../theme';
 
 export default function ArticleScreen() {
@@ -118,7 +118,7 @@ function renderArticle(a: Article, c: Colors, ap: Appearance): string {
   const family = ap.readerFont === 'serif' ? SERIF_STACK : SANS_STACK;
   const date = new Date(a.sort_at).toLocaleString();
   const byline = [a.feed_title, a.author, date].filter(Boolean).map((s) => escapeHtml(String(s))).join(' · ');
-  const content = ap.showImages ? a.content : stripMedia(a.content);
+  const content = ap.showImages ? upgradeInsecureMedia(a.content) : stripMedia(a.content);
   return `<!doctype html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="${c.isDark ? 'dark' : 'light'}">

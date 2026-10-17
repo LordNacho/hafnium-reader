@@ -2,7 +2,7 @@
 
 ## App Name
 
-{{NAME}}: RSS Reader
+{{NAME}}: RSS Feeds
 
 ## Subtitle
 
@@ -46,7 +46,7 @@ Your privacy
 
 ## Keywords
 
-atom,feed,feeds,opml,blog,blogs,ad-free,private,rdf,subscribe,articles,headlines,aggregator,sepia
+atom,opml,blog,blogs,ad-free,private,rdf,subscribe,articles,headlines,aggregator,newsreader,reading
 
 ## What's New
 
@@ -67,7 +67,9 @@ Secondary: Productivity
 
 ## Age rating notes
 
-The app has no user-generated content of its own, no chat, no purchases and no ads. It shows articles from feeds the user adds, and it can open the original article page in an in-app browser. Answer the age rating questionnaire honestly about that browser: Apple treats "Unrestricted Web Access" as a separate question, and answering Yes raises the rating. The app is not directed at children.
+The app has no user-generated content of its own, no chat, no purchases and no ads. It shows articles from feeds the user adds, and it can open an article's own page in the standard system browser view. The app has no address bar or general web browsing.
+
+Decision: answer None to every content question and No to "Unrestricted Web Access". If App Review disagrees and asks for Yes, change that answer; it only raises the age rating. The app is not directed at children.
 
 ## App Privacy
 

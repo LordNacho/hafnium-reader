@@ -1,8 +1,8 @@
-# App Store Connect listing: Quietfeed
+# App Store Connect listing: Hafnium Reader
 
 ## App Name
 
-Quietfeed: RSS Reader
+Hafnium Reader: RSS Feeds
 
 ## Subtitle
 
@@ -14,11 +14,11 @@ Read the blogs and sites you follow, even offline. No ads, no account, no tracki
 
 ## Description
 
-Quietfeed is a simple RSS reader for the sites, blogs and news sources you choose. There are no ads, no account to create and nothing to sign in to. Articles are saved on your phone, so you can keep reading on a plane, on the subway, or anywhere your connection drops.
+Hafnium Reader is a simple RSS reader for the sites, blogs and news sources you choose. There are no ads, no account to create and nothing to sign in to. Articles are saved on your phone, so you can keep reading on a plane, on the subway, or anywhere your connection drops.
 
-Already using another reader? Export your subscriptions as an OPML file from The Old Reader, Feedly, Inoreader or most other services, and import it into Quietfeed. Your folders come along too. You can export your list again at any time from the share sheet.
+Already using another reader? Export your subscriptions as an OPML file from The Old Reader, Feedly, Inoreader or most other services, and import it into Hafnium Reader. Your folders come along too. You can export your list again at any time from the share sheet.
 
-Adding a single feed is easy: paste a feed address, or just the site's homepage, and Quietfeed will look for its feed. It reads RSS 2.0, RSS 1.0 (RDF) and Atom.
+Adding a single feed is easy: paste a feed address, or just the site's homepage, and Hafnium Reader will look for its feed. It reads RSS 2.0, RSS 1.0 (RDF) and Atom.
 
 Reading
 • A clean article view with previous and next, star, mark read or unread, and share
@@ -40,17 +40,17 @@ Keeping storage in check
 Article text is stored for offline reading. Images load from the web when you're online.
 
 Your privacy
-Quietfeed doesn't collect anything. There is no analytics, no crash reporting and no tracking. The app connects only to the feeds and websites you add, directly from your device, and to pages you choose to open. Nothing is sent to the developer. Everything stays on your phone, and deleting the app deletes it.
+Hafnium Reader doesn't collect anything. There is no analytics, no crash reporting and no tracking. The app connects only to the feeds and websites you add, directly from your device, and to pages you choose to open. Nothing is sent to the developer. Everything stays on your phone, and deleting the app deletes it.
 
-Quietfeed is free, with no in-app purchases.
+Hafnium Reader is free, with no in-app purchases.
 
 ## Keywords
 
-atom,feed,feeds,opml,blog,blogs,ad-free,private,rdf,subscribe,articles,headlines,aggregator,sepia
+atom,opml,blog,blogs,ad-free,private,rdf,subscribe,articles,headlines,aggregator,newsreader,reading
 
 ## What's New
 
-The first release of Quietfeed. Add feeds by address or homepage, import your subscriptions from OPML, and read your articles offline, with no ads and no account.
+The first release of Hafnium Reader. Add feeds by address or homepage, import your subscriptions from OPML, and read your articles offline, with no ads and no account.
 
 ## Support URL
 
@@ -67,7 +67,9 @@ Secondary: Productivity
 
 ## Age rating notes
 
-The app has no user-generated content of its own, no chat, no purchases and no ads. It shows articles from feeds the user adds, and it can open the original article page in an in-app browser. Answer the age rating questionnaire honestly about that browser: Apple treats "Unrestricted Web Access" as a separate question, and answering Yes raises the rating. The app is not directed at children.
+The app has no user-generated content of its own, no chat, no purchases and no ads. It shows articles from feeds the user adds, and it can open an article's own page in the standard system browser view. The app has no address bar or general web browsing.
+
+Decision: answer None to every content question and No to "Unrestricted Web Access". If App Review disagrees and asks for Yes, change that answer; it only raises the age rating. The app is not directed at children.
 
 ## App Privacy
 
@@ -82,4 +84,4 @@ No login or account is needed. A fresh install has no feeds, so please add one t
 
 Articles are stored on the device and can be read offline once downloaded. Background refresh is scheduled by iOS and needs a physical device; it does not run reliably in the Simulator.
 
-Contact: {{SUPPORT_EMAIL}} ({{DEVELOPER_NAME}})
+Contact: info@hafnium.ltd (Hafnium Research)
