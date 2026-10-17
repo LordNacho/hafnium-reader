@@ -9,7 +9,7 @@ import { deleteReadArticles, storageStats } from '../db';
 import { notifyDataChanged, useDataVersion } from '../events';
 import { buildOpml, parseOpml } from '../lib/opml';
 import { DEFAULT_SETTINGS, loadSettings, saveSetting, type Settings, type ThemeName } from '../settings';
-import { exportFeeds, importFeeds, prune, syncAll } from '../sync';
+import { downloadFullTextBatch, exportFeeds, importFeeds, prune, syncAll } from '../sync';
 import { SERIF_FONT, useColors, useFontSize } from '../theme';
 
 const THEMES: ThemeName[] = ['system', 'light', 'dark', 'sepia'];
@@ -17,6 +17,8 @@ const TEXT_SCALES = [0.85, 1, 1.15, 1.3, 1.5];
 const FONTS: Settings['readerFont'][] = ['sans', 'serif'];
 const SPACINGS: Settings['lineSpacing'][] = ['compact', 'normal', 'relaxed'];
 const capitalize = (s: string) => s[0].toUpperCase() + s.slice(1);
+const FULLTEXT_OPTIONS: Settings['fullText'][] = ['off', 'wifi', 'always'];
+const FULLTEXT_LABELS: Record<Settings['fullText'], string> = { off: 'Off', wifi: 'On Wi-Fi', always: 'Always' };
 const ARTICLE_LIMITS = [25, 50, 100, 200, 500];
 const AGE_LIMITS = [7, 14, 30, 90, 365];
 const INTERVALS = [15, 30, 60, 180, 360, 720];
@@ -40,6 +42,7 @@ export default function SettingsScreen() {
     setSettings((s) => ({ ...s, [key]: value }));
     await saveSetting(key, value);
     if (key === 'backgroundRefresh' || key === 'refreshIntervalMinutes') await configureBackgroundRefresh();
+    if (key === 'fullText' && value !== 'off') downloadFullTextBatch().catch(() => {});
     if (key === 'maxArticlesPerFeed' || key === 'maxAgeDays') {
       await prune();
       notifyDataChanged();
@@ -112,6 +115,16 @@ export default function SettingsScreen() {
         <Choice label="Keep per feed" unit="articles" options={ARTICLE_LIMITS} value={settings.maxArticlesPerFeed} onChange={(v) => update('maxArticlesPerFeed', v)} />
         <Choice label="Keep articles for" unit="days" options={AGE_LIMITS} value={settings.maxAgeDays} onChange={(v) => update('maxAgeDays', v)} />
         <Text style={[styles.note, { color: colors.muted }]}>Starred articles are always kept.</Text>
+        <Choice
+          label="Download full articles"
+          options={FULLTEXT_OPTIONS}
+          value={settings.fullText}
+          onChange={(v) => update('fullText', v)}
+          format={(v) => FULLTEXT_LABELS[v]}
+        />
+        <Text style={[styles.note, { color: colors.muted }]}>
+          When a feed only gives a summary, the app downloads the linked article and keeps the readable text, up to 30 of the newest unread articles per refresh. Text a site loads only when you tap, and paywalled articles, stay as summaries.
+        </Text>
         {stats && (
           <Text style={[styles.note, { color: colors.muted }]}>
             {stats.feeds} feeds · {stats.articles} articles ({stats.unread} unread, {stats.starred} starred) · {(stats.bytes / 1048576).toFixed(1)} MB

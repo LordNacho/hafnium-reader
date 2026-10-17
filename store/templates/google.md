@@ -32,11 +32,12 @@ Keeping storage in check
 • Keep the newest 25 to 500 articles per feed, and articles from the last 7 to 365 days
 • Starred articles are never removed
 • Delete read articles in one tap
+• Download full articles when a feed only gives a summary, on Wi-Fi or always
 
-Article text is stored for offline reading. Images load from the web when you're online.
+Article text is stored for offline reading. When a feed only gives a summary, the app can download the full article from the linked page as well. Images load from the web when you're online.
 
 Your privacy
-{{NAME}} doesn't collect anything. There is no analytics, no crash reporting and no tracking. The app connects only to the feeds and websites you add, directly from your device, and to pages you choose to open. Nothing is sent to the developer. Everything stays on your phone, and uninstalling the app deletes it.
+{{NAME}} doesn't collect anything. There is no analytics, no crash reporting and no tracking. The app connects only to the feeds and websites you add and the articles they link to, directly from your device, and to pages you choose to open. Nothing is sent to the developer. Everything stays on your phone, and uninstalling the app deletes it.
 
 {{NAME}} is free, with no in-app purchases.
 

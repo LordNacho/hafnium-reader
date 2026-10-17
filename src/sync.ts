@@ -1,6 +1,8 @@
+import * as Network from 'expo-network';
 import { getDb } from './db';
 import { notifyDataChanged } from './events';
 import { looksLikeFeed, parseFeed, type ParsedFeed } from './lib/feed';
+import { extractArticle, isWorthKeeping, looksLikeSummary } from './lib/fulltext';
 import { absolutizeUrls, discoverFeedLinks, htmlToText, httpsVariant } from './lib/html';
 import type { OpmlFeed } from './lib/opml';
 import { loadSettings, type Settings } from './settings';
@@ -10,7 +12,7 @@ const CONCURRENCY = 4;
 const DAY_MS = 86400000;
 const HEADERS = {
   Accept: 'application/rss+xml, application/atom+xml, application/rdf+xml, application/xml;q=0.9, text/xml;q=0.9, */*;q=0.5',
-  'User-Agent': 'RSSReader/1.0 (+personal feed reader)',
+  'User-Agent': 'HafniumReader/1.0 (+https://reader.hafnium.ltd)',
 };
 
 async function fetchWithTimeout(url: string, headers: Record<string, string> = {}): Promise<Response> {
@@ -51,14 +53,21 @@ export interface SyncResult {
 
 let running: Promise<SyncResult> | null = null;
 
-/** Refresh every feed (or just one). Concurrent calls share the in-flight run. */
+/**
+ * Refresh every feed (or just one). Concurrent calls share the in-flight run.
+ * A full refresh then starts downloading full articles in the background; callers that must wait
+ * for those too (the background task) also await downloadFullTextBatch().
+ */
 export function syncAll(onlyFeedId?: number): Promise<SyncResult> {
   if (running && onlyFeedId == null) return running;
   const run = doSync(onlyFeedId).finally(() => {
     if (running === run) running = null;
     notifyDataChanged();
   });
-  if (onlyFeedId == null) running = run;
+  if (onlyFeedId == null) {
+    running = run;
+    run.then(() => downloadFullTextBatch()).catch(() => {});
+  }
   return run;
 }
 
@@ -187,6 +196,100 @@ export async function prune(settings?: Settings) {
      )`,
     s.maxArticlesPerFeed,
   );
+}
+
+const FULLTEXT_PER_REFRESH = 30;
+const FULLTEXT_CONCURRENCY = 3;
+const MAX_PAGE_CHARS = 3_000_000;
+const PAGE_HEADERS = {
+  Accept: 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.5',
+  // Some sites serve stripped-down pages to unknown clients, so ask like a mobile browser and name the app.
+  'User-Agent': 'Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130 Mobile Safari/537.36 HafniumReader/1.0',
+};
+
+export type FullTextResult = 'ok' | 'failed' | 'skipped';
+
+/** Download one article's linked page and keep its readable text if it adds to the feed's summary. */
+export async function downloadFullText(article: { id: number; url: string | null; content: string }): Promise<FullTextResult> {
+  const db = await getDb();
+  const save = async (status: FullTextResult, content: string | null) => {
+    await db.runAsync(
+      'UPDATE articles SET full_status = ?, full_content = ?, full_fetched_at = ? WHERE id = ?',
+      status,
+      content,
+      Date.now(),
+      article.id,
+    );
+    return status;
+  };
+  if (!article.url) return save('skipped', null);
+  try {
+    const { res, url } = await fetchPreferHttps(article.url, PAGE_HEADERS);
+    const type = res.headers.get('content-type') ?? '';
+    if (!res.ok || !/html/i.test(type)) throw new Error(`HTTP ${res.status} ${type}`);
+    const html = await res.text();
+    if (html.length > MAX_PAGE_CHARS) throw new Error('Page too large');
+    const extracted = extractArticle(html, res.url || url);
+    if (extracted && isWorthKeeping(extracted, article.content)) return save('ok', extracted.content);
+    return save('skipped', null);
+  } catch {
+    return save('failed', null);
+  }
+}
+
+async function onUnmeteredNetwork(): Promise<boolean> {
+  try {
+    const { type } = await Network.getNetworkStateAsync();
+    return type === Network.NetworkStateType.WIFI || type === Network.NetworkStateType.ETHERNET;
+  } catch {
+    return false;
+  }
+}
+
+let fullTextRun: Promise<number> | null = null;
+
+/**
+ * Download full articles for the newest unread (or starred) articles whose feed only gives a summary,
+ * within the user's network setting. Returns how many were saved. Concurrent calls share one run.
+ */
+export function downloadFullTextBatch(): Promise<number> {
+  if (!fullTextRun) {
+    fullTextRun = doFullTextBatch().finally(() => {
+      fullTextRun = null;
+      notifyDataChanged();
+    });
+  }
+  return fullTextRun;
+}
+
+async function doFullTextBatch(): Promise<number> {
+  const settings = await loadSettings();
+  if (settings.fullText === 'off') return 0;
+  if (settings.fullText === 'wifi' && !(await onUnmeteredNetwork())) return 0;
+
+  const db = await getDb();
+  const candidates = await db.getAllAsync<{ id: number; url: string | null; content: string }>(
+    'SELECT id, url, content FROM articles WHERE full_status IS NULL AND (is_read = 0 OR is_starred = 1) ORDER BY sort_at DESC LIMIT 200',
+  );
+  const queue: typeof candidates = [];
+  for (const a of candidates) {
+    if (a.url && looksLikeSummary(a.content)) {
+      if (queue.length < FULLTEXT_PER_REFRESH) queue.push(a);
+    } else {
+      // The feed already carries the article; don't check it again.
+      await db.runAsync("UPDATE articles SET full_status = 'skipped' WHERE id = ?", a.id);
+    }
+  }
+
+  let saved = 0;
+  let next = 0;
+  const worker = async () => {
+    while (next < queue.length) {
+      if ((await downloadFullText(queue[next++])) === 'ok') saved++;
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(FULLTEXT_CONCURRENCY, queue.length) }, worker));
+  return saved;
 }
 
 function normalizeUrl(input: string): string {

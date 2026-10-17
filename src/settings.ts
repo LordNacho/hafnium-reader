@@ -12,6 +12,8 @@ export interface Settings {
   wifiOnly: boolean;
   /** Article lists hide read articles. */
   unreadOnly: boolean;
+  /** Download the linked page for articles whose feed only gives a summary. */
+  fullText: 'off' | 'wifi' | 'always';
   theme: ThemeName;
   /** Multiplier on top of the phone's own text-size setting. */
   textScale: number;
@@ -31,6 +33,7 @@ export const DEFAULT_SETTINGS: Settings = {
   backgroundRefresh: true,
   wifiOnly: false,
   unreadOnly: true,
+  fullText: 'wifi',
   theme: 'system',
   textScale: 1,
   readerFont: 'sans',

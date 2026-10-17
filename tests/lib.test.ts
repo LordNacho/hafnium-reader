@@ -1,6 +1,7 @@
 /// <reference types="jest" />
 import { buildOpml, parseOpml } from '../src/lib/opml';
 import { SAMPLE_FEEDS } from '../src/sampleFeeds';
+import { extractArticle, isWorthKeeping, looksLikeSummary } from '../src/lib/fulltext';
 import { parseDate, parseFeed } from '../src/lib/feed';
 import { absolutizeUrls, discoverFeedLinks, htmlToText, httpsVariant, stripMedia, upgradeInsecureMedia } from '../src/lib/html';
 
@@ -106,6 +107,65 @@ describe('feed parsing', () => {
     expect(parseDate('Mon, 5 Oct 26 12:00 EST')).toBe(Date.UTC(2026, 9, 5, 17));
     expect(parseDate('2026-10-05')).toBe(Date.UTC(2026, 9, 5));
     expect(parseDate('garbage')).toBeNull();
+  });
+});
+
+describe('full-text extraction', () => {
+  const paragraph = (n: number) =>
+    `<p>Paragraph ${n} of the story. The harbour froze early this year, and the ferries ran late for a week while the ice breakers worked through the channel near the old customs house.</p>`;
+  const page = `<!doctype html><html><head><title>Ferries</title></head><body>
+    <nav><a href="/">Home</a> <a href="/news">News</a> <a href="/sport">Sport</a></nav>
+    <div class="ad">Buy now! Limited offer!</div>
+    <article><h1>Ferries run late as harbour freezes</h1>${Array.from({ length: 8 }, (_, i) => paragraph(i + 1)).join('')}
+      <img src="/img/ice.jpg"></article>
+    <footer>Comments (12) · Share · Cookie settings</footer></body></html>`;
+
+  it('keeps the article body and drops the page furniture', () => {
+    const a = extractArticle(page, 'https://news.example/2026/ferries');
+    expect(a).not.toBeNull();
+    expect(a!.content).toContain('Paragraph 8 of the story');
+    expect(a!.content).not.toContain('Limited offer');
+    expect(a!.content).not.toContain('Cookie settings');
+    expect(a!.content).toContain('https://news.example/img/ice.jpg');
+    expect(a!.textLength).toBeGreaterThan(1000);
+  });
+
+  it('reveals text hidden behind a "read more" button', () => {
+    const collapsed = `<html><body><article><h1>Ferries</h1>${paragraph(1)}${paragraph(2)}
+      <div class="article-truncated" hidden>${Array.from({ length: 6 }, (_, i) => paragraph(i + 3)).join('')}</div>
+      <button class="btn">Read more</button></article></body></html>`;
+    const a = extractArticle(collapsed, 'https://news.example/a')!;
+    expect(a.content).toContain('Paragraph 8 of the story');
+    expect(a.content).not.toContain('Read more');
+  });
+
+  it('uses structured-data articleBody when it is the longer text', () => {
+    const body = Array.from({ length: 10 }, (_, i) => `Line ${i + 1} of the full story about the frozen harbour and the late ferries.`).join('\n\n');
+    const teaser = `<html><head><script type="application/ld+json">${JSON.stringify({ '@type': 'NewsArticle', articleBody: body })}</script></head>
+      <body><article><h1>Ferries</h1>${paragraph(1)}</article></body></html>`;
+    const a = extractArticle(teaser, 'https://news.example/b')!;
+    expect(a.content).toContain('<p>Line 10 of the full story');
+  });
+
+  it('does not unhide or lift text from paywalled articles', () => {
+    const body = Array.from({ length: 10 }, (_, i) => `Paid line ${i + 1} of the members-only story.`).join('\n\n');
+    const paid = `<html><head><script type="application/ld+json">${JSON.stringify({ '@type': 'NewsArticle', isAccessibleForFree: false, articleBody: body })}</script></head>
+      <body><article><h1>Ferries</h1>${paragraph(1)}${paragraph(2)}<div class="read-more-content" hidden>${paragraph(99)}</div></article></body></html>`;
+    const a = extractArticle(paid, 'https://news.example/c');
+    expect(a?.content ?? '').not.toContain('Paid line');
+    expect(a?.content ?? '').not.toContain('Paragraph 99');
+  });
+
+  it('treats short feed text as a summary', () => {
+    expect(looksLikeSummary('<p>Ferries run late. Read more…</p>')).toBe(true);
+    expect(looksLikeSummary(`<div>${paragraph(1).repeat(12)}</div>`)).toBe(false);
+  });
+
+  it('only keeps pages that add real text over the feed', () => {
+    const extracted = { content: '', textLength: 4000 };
+    expect(isWorthKeeping(extracted, '<p>Short teaser.</p>')).toBe(true);
+    expect(isWorthKeeping(extracted, `<p>${'x'.repeat(3500)}</p>`)).toBe(false);
+    expect(isWorthKeeping({ content: '', textLength: 300 }, '<p>Hi</p>')).toBe(false);
   });
 });
 

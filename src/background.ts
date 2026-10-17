@@ -2,7 +2,7 @@ import * as BackgroundTask from 'expo-background-task';
 import * as Network from 'expo-network';
 import * as TaskManager from 'expo-task-manager';
 import { loadSettings } from './settings';
-import { syncAll } from './sync';
+import { downloadFullTextBatch, syncAll } from './sync';
 
 export const REFRESH_TASK = 'feed-refresh';
 
@@ -17,6 +17,8 @@ TaskManager.defineTask(REFRESH_TASK, async () => {
       }
     }
     await syncAll();
+    // Wait for full articles too; the OS may suspend the app as soon as this task returns.
+    await downloadFullTextBatch();
     return BackgroundTask.BackgroundTaskResult.Success;
   } catch {
     return BackgroundTask.BackgroundTaskResult.Failed;

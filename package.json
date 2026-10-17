@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "dependencies": {
+    "@mozilla/readability": "^0.6.0",
     "expo": "~58.0.14",
     "expo-background-task": "~58.0.11",
     "expo-build-properties": "~58.0.11",
@@ -20,6 +21,7 @@
     "expo-task-manager": "~58.0.12",
     "expo-web-browser": "~58.0.6",
     "fast-xml-parser": "^5.11.2",
+    "linkedom": "^0.18.13",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-native": "0.88.0",
@@ -55,17 +57,21 @@
       "<rootDir>/tests"
     ],
     "transform": {
-      "^.+\\.tsx?$": [
+      "^.+\\.(t|j)sx?$": [
         "ts-jest",
         {
           "diagnostics": false,
           "tsconfig": {
             "module": "commonjs",
-            "esModuleInterop": true
+            "esModuleInterop": true,
+            "allowJs": true
           }
         }
       ]
-    }
+    },
+    "transformIgnorePatterns": [
+      "/node_modules/(?!(linkedom|css-select|css-what|nth-check|boolbase|dom[a-z-]*|htmlparser2|entities|uhyphen|html-escaper|cssom)/)"
+    ]
   },
   "private": true,
   "expo": {

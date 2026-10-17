@@ -1,12 +1,14 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useMemo, useState } from 'react';
-import { PixelRatio, Pressable, Share, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, PixelRatio, Pressable, Share, StyleSheet, Text, View } from 'react-native';
 import { WebView, type WebViewNavigation } from 'react-native-webview';
 import { LINE_HEIGHTS, useAppearance, type Appearance } from '../../appearance';
 import { getArticle, setRead, setStarred, type Article } from '../../db';
 import { notifyDataChanged } from '../../events';
+import { looksLikeSummary } from '../../lib/fulltext';
 import { escapeHtml, stripMedia, upgradeInsecureMedia } from '../../lib/html';
+import { downloadFullText } from '../../sync';
 import { useColors, type Colors } from '../../theme';
 
 export default function ArticleScreen() {
@@ -14,6 +16,16 @@ export default function ArticleScreen() {
   const colors = useColors();
   const appearance = useAppearance();
   const [article, setArticle] = useState<Article | null>(null);
+  const [showFull, setShowFull] = useState(true);
+  const [fetchingFull, setFetchingFull] = useState(false);
+  const [fullError, setFullError] = useState<string | null>(null);
+  // Prev/Next swaps the article in place; start each one on its full text with no stale error.
+  const [uiArticleId, setUiArticleId] = useState(id);
+  if (uiArticleId !== id) {
+    setUiArticleId(id);
+    setShowFull(true);
+    setFullError(null);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -37,9 +49,26 @@ export default function ArticleScreen() {
     if (next) router.replace({ pathname: '/article/[id]', params: { id: next, ids } });
   };
 
-  const html = useMemo(() => (article ? renderArticle(article, colors, appearance) : ''), [article, colors, appearance]);
+  const body = article && showFull && article.full_content ? article.full_content : (article?.content ?? '');
+  const html = useMemo(() => (article ? renderArticle(article, body, colors, appearance) : ''), [article, body, colors, appearance]);
 
   if (!article) return <View style={{ flex: 1, backgroundColor: colors.background }} />;
+
+  const hasFull = !!article.full_content;
+  const canFetchFull = !hasFull && !!article.url && article.full_status !== 'skipped' && looksLikeSummary(article.content);
+
+  const getFullArticle = async () => {
+    setFetchingFull(true);
+    setFullError(null);
+    const result = await downloadFullText(article);
+    const fresh = await getArticle(article.id);
+    if (fresh) setArticle(fresh);
+    setShowFull(true);
+    setFetchingFull(false);
+    if (result === 'failed') setFullError('Couldn’t download the full article. Try again, or use Open site.');
+    if (result === 'skipped') setFullError('The linked page has no more text than the feed.');
+    notifyDataChanged();
+  };
 
   const toggleStar = async () => {
     await setStarred(article.id, !article.is_starred);
@@ -75,6 +104,26 @@ export default function ArticleScreen() {
           ),
         }}
       />
+      {(hasFull || canFetchFull || fullError) && (
+        <View style={[styles.fullBar, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+          <Text style={[styles.fullBarText, { color: colors.muted }]} numberOfLines={2}>
+            {fullError ?? (hasFull ? (showFull ? 'Full article, saved for offline' : 'Feed summary') : 'This feed only gives a summary')}
+          </Text>
+          {hasFull ? (
+            <Pressable onPress={() => setShowFull(!showFull)} hitSlop={8}>
+              <Text style={[styles.fullBarAction, { color: colors.accent }]}>{showFull ? 'Show summary' : 'Show full article'}</Text>
+            </Pressable>
+          ) : canFetchFull ? (
+            fetchingFull ? (
+              <ActivityIndicator color={colors.accent} />
+            ) : (
+              <Pressable onPress={getFullArticle} hitSlop={8}>
+                <Text style={[styles.fullBarAction, { color: colors.accent }]}>Download full article</Text>
+              </Pressable>
+            )
+          ) : null}
+        </View>
+      )}
       <WebView
         originWhitelist={['about:*', 'data:*']}
         source={{ html }}
@@ -111,13 +160,13 @@ function ToolbarButton({ label, onPress, disabled }: { label: string; onPress: (
 const SANS_STACK = "-apple-system, system-ui, Roboto, 'Helvetica Neue', sans-serif";
 const SERIF_STACK = "Georgia, 'Iowan Old Style', 'Noto Serif', 'Times New Roman', serif";
 
-function renderArticle(a: Article, c: Colors, ap: Appearance): string {
+function renderArticle(a: Article, bodyHtml: string, c: Colors, ap: Appearance): string {
   // The WebView doesn't follow the phone's text-size setting on its own, so apply it here too.
   const fontSize = (18 * ap.textScale * PixelRatio.getFontScale()).toFixed(1);
   const family = ap.readerFont === 'serif' ? SERIF_STACK : SANS_STACK;
   const date = new Date(a.sort_at).toLocaleString();
   const byline = [a.feed_title, a.author, date].filter(Boolean).map((s) => escapeHtml(String(s))).join(' · ');
-  const content = ap.showImages ? upgradeInsecureMedia(a.content) : stripMedia(a.content);
+  const content = ap.showImages ? upgradeInsecureMedia(bodyHtml) : stripMedia(bodyHtml);
   return `<!doctype html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="${c.isDark ? 'dark' : 'light'}">
@@ -147,6 +196,9 @@ function renderArticle(a: Article, c: Colors, ap: Appearance): string {
 const styles = StyleSheet.create({
   headerButtons: { flexDirection: 'row', gap: 18, alignItems: 'center' },
   headerButton: { fontSize: 18, fontWeight: '500' },
+  fullBar: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth },
+  fullBarText: { flex: 1, fontSize: 13 },
+  fullBarAction: { fontSize: 14, fontWeight: '600' },
   toolbar: { flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 12, paddingBottom: 28, borderTopWidth: StyleSheet.hairlineWidth },
   toolbarButton: { paddingHorizontal: 6 },
 });

@@ -42,9 +42,10 @@
     <p>The app only connects to:</p>
     <ul>
       <li><strong>The feeds and websites you add.</strong> When you add a feed, or when the app refreshes (when you open it, or in the background if your phone allows), it downloads the feed directly from that site. If you paste a website's homepage, the app also loads that page to find its feed. Images in articles are loaded from the sites that host them when you view them.</li>
+      <li><strong>Article pages, for full articles.</strong> When a feed only gives a summary and "Download full articles" is on (it is on Wi-Fi by default), the app downloads the web page the article links to, directly from that site, and keeps the readable text on your device. You can turn this off in Settings.</li>
       <li><strong>Pages you choose to open.</strong> If you open an article's original page, it loads in an in-app browser, directly from that website.</li>
     </ul>
-    <p>These requests go straight from your device to those sites. Like any web request, they reveal your device's IP address to that site, along with a short identifier for the app (<code>RSSReader/1.0 (+personal feed reader)</code>). Each site handles that information under its own privacy policy. To save data, the app may also send the site the standard caching details it was given last time (ETag and Last-Modified), so the site can reply "nothing has changed".</p>
+    <p>These requests go straight from your device to those sites. Like any web request, they reveal your device's IP address to that site, along with a short identifier for the app: <code>HafniumReader/1.0</code> for feeds, and a standard mobile-browser identifier ending in <code>HafniumReader/1.0</code> for article pages. Each site handles that information under its own privacy policy. To save data, the app may also send the site the standard caching details it was given last time (ETag and Last-Modified), so the site can reply "nothing has changed".</p>
     <p>Requests use whatever address the feed or page has: HTTPS where the site supports it.</p>
 
     <h2>What we collect</h2>
