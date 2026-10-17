@@ -2,7 +2,7 @@
 import { buildOpml, parseOpml } from '../src/lib/opml';
 import { SAMPLE_FEEDS } from '../src/sampleFeeds';
 import { extractArticle, isWorthKeeping, looksLikeSummary } from '../src/lib/fulltext';
-import { hostOf, isAdNavigation, PAGE_FILTER_SCRIPT } from '../src/lib/pageFilter';
+import { DARK_PAGE_SCRIPT, declaresDarkSupport, hostOf, isAdNavigation, PAGE_FILTER_SCRIPT, preparePageHtml } from '../src/lib/pageFilter';
 import { parseDate, parseFeed } from '../src/lib/feed';
 import { absolutizeUrls, discoverFeedLinks, discoverFeeds, htmlToText, httpsVariant, originOf, stripMedia, upgradeInsecureMedia } from '../src/lib/html';
 import { DIRECTORY, searchDirectory } from '../src/directory';
@@ -182,6 +182,17 @@ describe('page filter', () => {
     expect(isAdNavigation('https://www.taboola.com/redirect?u=x')).toBe(true);
     expect(isAdNavigation('https://www.theguardian.com/world/2026/oct/17/story')).toBe(false);
     expect(isAdNavigation('https://notdoubleclick.net.example.org/')).toBe(false);
+  });
+  it('darkens downloaded pages unless they have their own dark design', () => {
+    const light = '<html><head><title>x</title></head><body><a href="/b">b</a></body></html>';
+    const out = preparePageHtml(light, 'https://news.example/a', true);
+    expect(out).toContain('<head><base href="https://news.example/a"><style id="hafnium-dark">');
+    expect(preparePageHtml(light, 'https://news.example/a', false)).not.toContain('hafnium-dark');
+    const darkAware = '<html><head><style>@media (prefers-color-scheme: dark) { body { background: #000 } }</style></head></html>';
+    expect(declaresDarkSupport(darkAware)).toBe(true);
+    expect(preparePageHtml(darkAware, 'https://news.example/a', true)).not.toContain('hafnium-dark');
+    expect(preparePageHtml('<p>no head</p>', 'https://x.example/', true).startsWith('<base href="https://x.example/">')).toBe(true);
+    expect(() => new Function(DARK_PAGE_SCRIPT)).not.toThrow();
   });
   it('builds a filter script that hides ads and blocks pop-up windows', () => {
     expect(PAGE_FILTER_SCRIPT).toContain('ins.adsbygoogle');

@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { Appearance as NativeAppearance } from 'react-native';
 import { APPEARANCE_KEYS, DEFAULT_SETTINGS, loadSettings, saveSetting, type AppearanceKey, type Settings } from './settings';
 
 export type Appearance = Pick<Settings, AppearanceKey>;
@@ -16,6 +17,12 @@ function pick(s: Settings): Appearance {
 
 function set(next: Appearance) {
   current = next;
+  // Tell Android/iOS too, so web pages that have a dark design follow the app's theme rather than the phone's.
+  try {
+    NativeAppearance.setColorScheme(next.theme === 'dark' ? 'dark' : next.theme === 'system' ? 'auto' : 'light');
+  } catch {
+    // not available (tests, web)
+  }
   listeners.forEach((l) => l());
 }
 

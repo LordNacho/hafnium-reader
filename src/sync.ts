@@ -243,6 +243,15 @@ const PAGE_HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130 Mobile Safari/537.36 HafniumReader/1.0',
 };
 
+/** Download a web page for the page viewer (JavaScript off), the same way full articles are fetched. */
+export async function downloadPage(pageUrl: string): Promise<{ html: string; url: string }> {
+  const { res, url } = await fetchPreferHttps(pageUrl, PAGE_HEADERS);
+  if (!res.ok) throw new Error(`The site answered HTTP ${res.status}.`);
+  const html = await res.text();
+  if (html.length > MAX_PAGE_CHARS) throw new Error('The page is too large to show here.');
+  return { html, url: res.url || url };
+}
+
 export type FullTextStatus = 'ok' | 'failed' | 'skipped';
 export interface FullTextResult {
   status: FullTextStatus;

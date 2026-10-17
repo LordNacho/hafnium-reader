@@ -64,6 +64,49 @@ const HIDE_SELECTORS = [
   '[class*="cookie-consent"]',
 ];
 
+/**
+ * Dark styling for pages that only have a light design: invert the page's colours and turn images and
+ * video back to normal. Pure CSS, so it works with JavaScript off and on both platforms.
+ */
+export const DARK_PAGE_CSS = `html { background: #fff !important; filter: invert(1) hue-rotate(180deg) !important; }
+img, video, picture, canvas, iframe, embed, object, svg image, [style*="background-image"] { filter: invert(1) hue-rotate(180deg) !important; }`;
+
+/** Pages with their own dark design must not be inverted (that would turn them light again). */
+export function declaresDarkSupport(html: string): boolean {
+  return /prefers-color-scheme\s*:\s*dark/i.test(html) || /<meta[^>]+name=["']?color-scheme["']?[^>]*content=["'][^"']*dark/i.test(html);
+}
+
+const escapeAttr = (s: string) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+
+/** Prepare a downloaded page for display without JavaScript: a base URL for its relative links, and dark styling. */
+export function preparePageHtml(html: string, pageUrl: string, dark: boolean): string {
+  const extra =
+    (/<base\s/i.test(html) ? '' : `<base href="${escapeAttr(pageUrl)}">`) +
+    (dark && !declaresDarkSupport(html) ? `<style id="hafnium-dark">${DARK_PAGE_CSS}</style>` : '');
+  if (!extra) return html;
+  const head = html.match(/<head\b[^>]*>/i);
+  if (head && head.index !== undefined) {
+    const at = head.index + head[0].length;
+    return html.slice(0, at) + extra + html.slice(at);
+  }
+  return extra + html;
+}
+
+/** The same dark styling for pages allowed to run JavaScript; removed again if the page turns out to have a dark design. */
+export const DARK_PAGE_SCRIPT = `(function () {
+  var style = document.createElement('style');
+  style.id = 'hafnium-dark';
+  style.textContent = ${JSON.stringify(DARK_PAGE_CSS)};
+  (document.head || document.documentElement).appendChild(style);
+  document.addEventListener('DOMContentLoaded', function () {
+    var html = document.documentElement.outerHTML;
+    if (/prefers-color-scheme\\s*:\\s*dark/i.test(html) || document.querySelector('meta[name="color-scheme"][content*="dark"]')) {
+      style.remove();
+    }
+  });
+})();
+true;`;
+
 /** Runs before the page's own scripts when JavaScript is allowed for a site. */
 export const PAGE_FILTER_SCRIPT = `(function () {
   var css = ${JSON.stringify(`${HIDE_SELECTORS.join(',\n')} { display: none !important; }
