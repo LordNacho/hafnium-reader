@@ -9,7 +9,16 @@ import { deleteReadArticles, storageStats } from '../db';
 import { notifyDataChanged, useDataVersion } from '../events';
 import { buildOpml, parseOpml } from '../lib/opml';
 import { DEFAULT_SETTINGS, loadSettings, saveSetting, type Settings, type ThemeName } from '../settings';
-import { downloadFullTextBatch, exportFeeds, fullTextWaitingForWifi, importFeeds, prune, syncAll } from '../sync';
+import {
+  downloadFullTextBatch,
+  exportFeeds,
+  fullTextCounts,
+  fullTextWaitingForWifi,
+  importFeeds,
+  prune,
+  syncAll,
+  type FullTextCounts,
+} from '../sync';
 import { SERIF_FONT, useColors, useFontSize } from '../theme';
 
 const THEMES: ThemeName[] = ['system', 'light', 'dark', 'sepia'];
@@ -35,9 +44,11 @@ export default function SettingsScreen() {
   const [fullTextBusy, setFullTextBusy] = useState(false);
   const [fullTextResult, setFullTextResult] = useState<string | null>(null);
   const [waitingForWifi, setWaitingForWifi] = useState(false);
+  const [counts, setCounts] = useState<FullTextCounts | null>(null);
 
   useEffect(() => {
     fullTextWaitingForWifi().then(setWaitingForWifi);
+    fullTextCounts().then(setCounts);
   }, [settings.fullText, version]);
 
   const downloadFullTextNow = async () => {
@@ -45,13 +56,17 @@ export default function SettingsScreen() {
     setFullTextResult(null);
     try {
       const r = await downloadFullTextBatch({ manual: true });
-      setFullTextResult(
-        r.saved > 0
-          ? `Saved ${r.saved} full article${r.saved === 1 ? '' : 's'}.`
-          : r.checked > 0
-            ? 'No more to download: the rest either already have their full text or the site didn’t offer more.'
-            : 'Nothing to download right now. Unread articles that only have a summary will be picked up after the next refresh.',
-      );
+      const parts: string[] = [];
+      if (r.saved > 0) parts.push(`Saved ${r.saved} full article${r.saved === 1 ? '' : 's'}.`);
+      if (r.failed > 0) parts.push(`${r.failed} couldn’t be downloaded. ${r.firstError ?? ''}`.trim());
+      if (!parts.length) {
+        parts.push(
+          r.checked > 0
+            ? 'Nothing more to download: those articles’ feeds already include the full text, or the sites offered no more.'
+            : 'Every article already has its full text, or its feed includes it.',
+        );
+      }
+      setFullTextResult(parts.join(' '));
     } catch (e) {
       setFullTextResult(`Couldn’t download: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
@@ -167,6 +182,11 @@ export default function SettingsScreen() {
           <ActionRow label="Download full articles now" detail="Uses mobile data if you’re not on Wi-Fi." onPress={downloadFullTextNow} />
         )}
         {fullTextResult && <Text style={[styles.note, { color: colors.muted }]}>{fullTextResult}</Text>}
+        {counts && (
+          <Text style={[styles.note, { color: colors.muted }]}>
+            Full text: {counts.saved} saved · {counts.failed} failed · {counts.notNeeded} not needed · {counts.notTried} not tried yet
+          </Text>
+        )}
         {stats && (
           <Text style={[styles.note, { color: colors.muted }]}>
             {stats.feeds} feeds · {stats.articles} articles ({stats.unread} unread, {stats.starred} starred) · {(stats.bytes / 1_000_000).toFixed(1)} MB

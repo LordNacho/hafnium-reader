@@ -64,8 +64,8 @@ export default function ArticleScreen() {
     if (fresh) setArticle(fresh);
     setShowFull(true);
     setFetchingFull(false);
-    if (result === 'failed') setFullError('Couldn’t download the full article. Try again, or use Open site.');
-    if (result === 'skipped') setFullError('The linked page has no more text than the feed.');
+    if (result.status === 'failed') setFullError(`${result.error ?? 'Couldn’t download the full article.'} Try again, or use Open site.`);
+    if (result.status === 'skipped') setFullError('The linked page has no more text than the feed.');
     notifyDataChanged();
   };
 

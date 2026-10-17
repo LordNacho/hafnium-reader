@@ -243,12 +243,17 @@ const PAGE_HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130 Mobile Safari/537.36 HafniumReader/1.0',
 };
 
-export type FullTextResult = 'ok' | 'failed' | 'skipped';
+export type FullTextStatus = 'ok' | 'failed' | 'skipped';
+export interface FullTextResult {
+  status: FullTextStatus;
+  /** Why it failed, in words a person can act on. */
+  error?: string;
+}
 
 /** Download one article's linked page and keep its readable text if it adds to the feed's summary. */
 export async function downloadFullText(article: { id: number; url: string | null; content: string }): Promise<FullTextResult> {
   const db = await getDb();
-  const save = async (status: FullTextResult, content: string | null) => {
+  const save = async (status: FullTextStatus, content: string | null, error?: string): Promise<FullTextResult> => {
     await db.runAsync(
       'UPDATE articles SET full_status = ?, full_content = ?, full_fetched_at = ? WHERE id = ?',
       status,
@@ -256,21 +261,43 @@ export async function downloadFullText(article: { id: number; url: string | null
       Date.now(),
       article.id,
     );
-    return status;
+    return { status, error };
   };
   if (!article.url) return save('skipped', null);
+  let stage = 'downloading the page';
   try {
     const { res, url } = await fetchPreferHttps(article.url, PAGE_HEADERS);
     const type = res.headers.get('content-type') ?? '';
-    if (!res.ok || !/html/i.test(type)) throw new Error(`HTTP ${res.status} ${type}`);
+    if (!res.ok) throw new Error(`the site answered HTTP ${res.status}`);
+    if (type && !/html/i.test(type)) throw new Error(`the link is not a web page (${type.split(';')[0]})`);
     const html = await res.text();
-    if (html.length > MAX_PAGE_CHARS) throw new Error('Page too large');
+    if (html.length > MAX_PAGE_CHARS) throw new Error('the page is too large');
+    stage = 'reading the page';
     const extracted = extractArticle(html, res.url || url);
     if (extracted && isWorthKeeping(extracted, article.content)) return save('ok', extracted.content);
     return save('skipped', null);
-  } catch {
-    return save('failed', null);
+  } catch (e) {
+    const reason = e instanceof Error ? (e.name === 'AbortError' ? 'the site took too long to answer' : e.message) : String(e);
+    return save('failed', null, `Failed while ${stage}: ${reason}`);
   }
+}
+
+export interface FullTextCounts {
+  saved: number;
+  failed: number;
+  notNeeded: number;
+  notTried: number;
+}
+
+export async function fullTextCounts(): Promise<FullTextCounts> {
+  const db = await getDb();
+  const row = await db.getFirstAsync<FullTextCounts>(`
+    SELECT COALESCE(SUM(full_status = 'ok'), 0) AS saved,
+           COALESCE(SUM(full_status = 'failed'), 0) AS failed,
+           COALESCE(SUM(full_status = 'skipped'), 0) AS notNeeded,
+           COALESCE(SUM(full_status IS NULL), 0) AS notTried
+    FROM articles`);
+  return row ?? { saved: 0, failed: 0, notNeeded: 0, notTried: 0 };
 }
 
 async function onUnmeteredNetwork(): Promise<boolean> {
@@ -286,6 +313,9 @@ export interface FullTextBatchResult {
   saved: number;
   /** Articles that were looked at (downloaded or found not to need it). */
   checked: number;
+  failed: number;
+  /** The first failure's reason, to show the user. */
+  firstError?: string;
   /** Set when nothing ran: the setting is off, or it is waiting for Wi-Fi. */
   skippedBecause?: 'off' | 'not-on-wifi';
 }
@@ -319,12 +349,18 @@ export async function fullTextWaitingForWifi(): Promise<boolean> {
 
 async function doFullTextBatch(manual: boolean): Promise<FullTextBatchResult> {
   const settings = await loadSettings();
-  if (!manual && settings.fullText === 'off') return { saved: 0, checked: 0, skippedBecause: 'off' };
-  if (!manual && settings.fullText === 'wifi' && !(await onUnmeteredNetwork())) return { saved: 0, checked: 0, skippedBecause: 'not-on-wifi' };
+  if (!manual && settings.fullText === 'off') return { saved: 0, checked: 0, failed: 0, skippedBecause: 'off' };
+  if (!manual && settings.fullText === 'wifi' && !(await onUnmeteredNetwork())) {
+    return { saved: 0, checked: 0, failed: 0, skippedBecause: 'not-on-wifi' };
+  }
 
   const db = await getDb();
+  // Automatic runs: unread or starred articles not tried yet. When the user asks: every article
+  // without its full text, including read ones and earlier failures.
   const candidates = await db.getAllAsync<{ id: number; url: string | null; content: string }>(
-    'SELECT id, url, content FROM articles WHERE full_status IS NULL AND (is_read = 0 OR is_starred = 1) ORDER BY sort_at DESC LIMIT 200',
+    manual
+      ? "SELECT id, url, content FROM articles WHERE full_status IS NULL OR full_status = 'failed' ORDER BY sort_at DESC LIMIT 300"
+      : 'SELECT id, url, content FROM articles WHERE full_status IS NULL AND (is_read = 0 OR is_starred = 1) ORDER BY sort_at DESC LIMIT 200',
   );
   const queue: typeof candidates = [];
   for (const a of candidates) {
@@ -340,19 +376,25 @@ async function doFullTextBatch(manual: boolean): Promise<FullTextBatchResult> {
   const limit = settings.maxStorageMB > 0 ? settings.maxStorageMB * 1_000_000 * 0.95 : Infinity;
   let used = await storedBytes();
   let saved = 0;
+  let failed = 0;
+  let firstError: string | undefined;
   let next = 0;
   const worker = async () => {
     while (next < queue.length && used < limit) {
-      if ((await downloadFullText(queue[next++])) === 'ok') {
+      const result = await downloadFullText(queue[next++]);
+      if (result.status === 'ok') {
         saved++;
         used = await storedBytes();
         notifyDataChanged(); // lists show the "Full article" marker as each one lands
+      } else if (result.status === 'failed') {
+        failed++;
+        firstError ??= result.error;
       }
     }
   };
   await Promise.all(Array.from({ length: Math.min(FULLTEXT_CONCURRENCY, queue.length) }, worker));
   await prune(settings);
-  return { saved, checked: candidates.length };
+  return { saved, checked: candidates.length, failed, firstError };
 }
 
 function normalizeUrl(input: string): string {
