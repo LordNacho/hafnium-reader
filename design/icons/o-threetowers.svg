@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#dfeaf3"/>
+      <stop offset="1" stop-color="#f4ead9"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#sky)"/>
+  <!-- feed from the central spire -->
+  <g fill="none" stroke="#d9480f" stroke-width="34" stroke-linecap="round">
+    <path d="M512 230 A70 70 0 0 1 582 300"/>
+    <path d="M512 175 A125 125 0 0 1 637 300" opacity=".5"/>
+  </g>
+  <!-- three towers with copper roofs, joined by a wall with a gate -->
+  <rect x="412" y="664" width="200" height="160" fill="#e3d6bc"/>
+  <path d="M477 824 V778 a35 35 0 0 1 70 0 V824 Z" fill="#3a3530"/>
+  <rect x="312" y="534" width="100" height="290" fill="#efe4cf"/>
+  <rect x="612" y="534" width="100" height="290" fill="#efe4cf"/>
+  <rect x="457" y="444" width="110" height="380" fill="#f3e9d6"/>
+  <g fill="#000000" opacity=".07">
+    <rect x="392" y="534" width="20" height="290"/><rect x="692" y="534" width="20" height="290"/><rect x="545" y="444" width="22" height="380"/>
+  </g>
+  <path d="M302 534 L422 534 L362 434 Z" fill="#4f9c8a"/>
+  <path d="M602 534 L722 534 L662 434 Z" fill="#4f9c8a"/>
+  <path d="M447 444 L577 444 L512 314 Z" fill="#4f9c8a"/>
+  <g fill="#3a3530">
+    <path d="M350 640 v-34 a12 12 0 0 1 24 0 v34 Z"/>
+    <path d="M650 640 v-34 a12 12 0 0 1 24 0 v34 Z"/>
+    <path d="M500 560 v-40 a12 12 0 0 1 24 0 v40 Z"/>
+  </g>
+  <circle cx="512" cy="300" r="22" fill="#d9480f"/>
+  <!-- the sea -->
+  <rect y="824" width="1024" height="200" fill="#e4eef5"/>
+  <g fill="none" stroke-width="26" stroke-linecap="round">
+    <path d="M150 860 q 46 -28 92 0 t 92 0 t 92 0 t 92 0 t 92 0 t 92 0 t 92 0 t 92 0" stroke="#2f6f9f"/>
+    <path d="M150 925 q 46 -28 92 0 t 92 0 t 92 0 t 92 0 t 92 0 t 92 0 t 92 0 t 92 0" stroke="#5b93bd"/>
+    <path d="M150 990 q 46 -28 92 0 t 92 0 t 92 0 t 92 0 t 92 0 t 92 0 t 92 0 t 92 0" stroke="#8fb6d4"/>
+  </g>
+</svg>
