@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1b2742"/>
+      <stop offset="1" stop-color="#0b1020"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <!-- full Bohr orbits, faint -->
+  <g fill="none" stroke="#9fb3d6" stroke-width="6" opacity=".22">
+    <circle cx="380" cy="660" r="150"/>
+    <circle cx="380" cy="660" r="280"/>
+    <circle cx="380" cy="660" r="410"/>
+  </g>
+  <!-- the quarter of each orbit that is also a feed wave -->
+  <g fill="none" stroke="#ff8a4c" stroke-width="54" stroke-linecap="round">
+    <path d="M380 510 A150 150 0 0 1 530 660"/>
+    <path d="M380 380 A280 280 0 0 1 660 660" opacity=".6"/>
+    <path d="M380 250 A410 410 0 0 1 790 660" opacity=".28"/>
+  </g>
+  <!-- electrons -->
+  <g fill="#f4ecd8">
+    <circle cx="239" cy="711" r="17"/>
+    <circle cx="284" cy="923" r="17"/>
+    <circle cx="175" cy="305" r="17"/>
+  </g>
+  <circle cx="380" cy="660" r="58" fill="#ff8a4c"/>
+</svg>

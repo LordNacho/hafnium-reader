@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#cfe2f0"/>
+      <stop offset="1" stop-color="#f6e6d2"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#sky)"/>
+  <!-- feed waves rising over the harbour -->
+  <g fill="none" stroke="#d9480f" stroke-width="34" stroke-linecap="round">
+    <path d="M360 320 A80 80 0 0 1 440 400"/>
+    <path d="M360 250 A150 150 0 0 1 510 400" opacity=".5"/>
+  </g>
+  <circle cx="360" cy="400" r="28" fill="#d9480f"/>
+  <!-- Nyhavn-style gabled houses -->
+  <g>
+    <path d="M212 580 V540 H232 V510 H252 V480 H292 V510 H312 V540 H332 V580 V770 H212 Z" fill="#e0a33a"/>
+    <path d="M332 540 V500 H352 V470 H372 V440 H412 V470 H432 V500 H452 V540 V770 H332 Z" fill="#c8431a"/>
+    <path d="M452 600 V560 H472 V530 H492 V500 H532 V530 H552 V560 H572 V600 V770 H452 Z" fill="#2f5d8a"/>
+    <path d="M572 560 V520 H592 V490 H612 V460 H652 V490 H672 V520 H692 V560 V770 H572 Z" fill="#b8352a"/>
+    <path d="M692 590 V550 H712 V520 H732 V490 H772 V520 H792 V550 H812 V590 V770 H692 Z" fill="#e9d6ae"/>
+  </g>
+  <g fill="#fff3df" opacity=".9">
+    <rect x="240" y="610" width="20" height="30"/><rect x="284" y="610" width="20" height="30"/>
+    <rect x="240" y="680" width="20" height="30"/><rect x="284" y="680" width="20" height="30"/>
+    <rect x="360" y="580" width="20" height="30"/><rect x="404" y="580" width="20" height="30"/>
+    <rect x="360" y="660" width="20" height="30"/><rect x="404" y="660" width="20" height="30"/>
+    <rect x="480" y="630" width="20" height="30"/><rect x="524" y="630" width="20" height="30"/>
+    <rect x="480" y="690" width="20" height="30"/><rect x="524" y="690" width="20" height="30"/>
+    <rect x="600" y="600" width="20" height="30"/><rect x="644" y="600" width="20" height="30"/>
+    <rect x="600" y="670" width="20" height="30"/><rect x="644" y="670" width="20" height="30"/>
+  </g>
+  <g fill="#8a6d45" opacity=".55">
+    <rect x="720" y="620" width="20" height="30"/><rect x="764" y="620" width="20" height="30"/>
+    <rect x="720" y="690" width="20" height="30"/><rect x="764" y="690" width="20" height="30"/>
+  </g>
+  <!-- harbour water with reflections -->
+  <rect y="770" width="1024" height="254" fill="#24466e"/>
+  <g opacity=".35">
+    <rect x="212" y="790" width="120" height="16" fill="#e0a33a"/>
+    <rect x="332" y="790" width="120" height="16" fill="#c8431a"/>
+    <rect x="452" y="790" width="120" height="16" fill="#5d8ab8"/>
+    <rect x="572" y="790" width="120" height="16" fill="#b8352a"/>
+    <rect x="692" y="790" width="120" height="16" fill="#e9d6ae"/>
+  </g>
+  <g stroke="#ffffff" stroke-width="6" stroke-linecap="round" opacity=".3">
+    <path d="M240 840 H330 M420 860 H540 M620 840 H760 M300 900 H420 M560 910 H700"/>
+  </g>
+</svg>

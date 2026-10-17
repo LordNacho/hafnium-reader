@@ -1,0 +1,152 @@
+<title>Icon Drafts</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: a contact sheet of six concepts, each shown the way the stores and launchers will crop it, then all six side by side on real-looking home screens */
+:root {
+  --bg: #f6f6f4; --card: #ffffff; --fg: #16181d; --muted: #6b6f78; --line: #e2e2de; --accent: #d9480f;
+  --wall-light-a: #dfe7ef; --wall-light-b: #f3e6d8; --wall-dark-a: #1a1f2b; --wall-dark-b: #2b2230;
+  --dummy-1: #c9d3de; --dummy-2: #d8cfc4; --dummy-3: #cfd8cc; --wall-text-light: #1b1e24; --wall-text-dark: #f2f2f2;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #121315; --card: #1b1c1f; --fg: #ececec; --muted: #9b9fa7; --line: #2c2d31; --accent: #ff8a4c; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #121315; --card: #1b1c1f; --fg: #ececec; --muted: #9b9fa7; --line: #2c2d31; --accent: #ff8a4c; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1120px; margin: 0 auto; padding-block: 28px 56px; display: flex; flex-direction: column; gap: 36px; }
+header h1 { font-size: 28px; margin: 0 0 6px; text-wrap: balance; }
+header p { margin: 0; color: var(--muted); max-width: 62ch; }
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 14px; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 16px; }
+.concept { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.concept-head { display: flex; align-items: baseline; gap: 10px; }
+.letter { font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+.concept h3 { margin: 0; font-size: 18px; }
+.name { color: var(--muted); font-size: 13px; margin-left: auto; white-space: nowrap; }
+.why { margin: 0; color: var(--muted); font-size: 14px; }
+.masks { display: flex; gap: 18px; align-items: flex-end; flex-wrap: wrap; }
+.mask { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+.ios { width: 120px; height: 120px; border-radius: 22.4%; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,.18); }
+.ios img { width: 100%; height: 100%; display: block; }
+.android { width: 120px; height: 120px; border-radius: 50%; overflow: hidden; position: relative; box-shadow: 0 2px 10px rgba(0,0,0,.18); }
+.android img { position: absolute; width: 150%; height: 150%; left: -25%; top: -25%; max-width: none; }
+.sizes { display: flex; gap: 14px; align-items: flex-end; }
+.sizes .ios { box-shadow: 0 1px 4px rgba(0,0,0,.18); }
+
+.walls { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.wall { border-radius: 28px; padding: 28px 22px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px 10px; justify-items: center; }
+.wall.light { background: linear-gradient(160deg, var(--wall-light-a), var(--wall-light-b)); color: var(--wall-text-light); }
+.wall.dark { background: linear-gradient(160deg, var(--wall-dark-a), var(--wall-dark-b)); color: var(--wall-text-dark); }
+.app { display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 11px; width: 64px; text-align: center; }
+.app .ios { width: 58px; height: 58px; box-shadow: none; }
+.dummy { width: 58px; height: 58px; border-radius: 22.4%; }
+.d1 { background: var(--dummy-1); } .d2 { background: var(--dummy-2); } .d3 { background: var(--dummy-3); }
+.wall.dark .dummy { opacity: .35; }
+.app span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+
+.facts { margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px 24px; }
+.facts div { min-width: 0; }
+.facts dt { font-weight: 600; }
+.facts dd { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
+.next { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; }
+.next p { margin: 0 0 8px; }
+.next p:last-child { margin: 0; color: var(--muted); }
+@media (max-width: 420px) { .ios, .android { width: 96px; height: 96px; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Hafnium Reader icons</h1>
+    <p>Round two draws on hafnium and Copenhagen. Each icon is shown in the iPhone mask, in Android’s round crop (which only shows the middle two-thirds), at small sizes, and on home screens. Pick one by letter, or mix parts of two.</p>
+  </header>
+
+  <section>
+    <h2>Material to draw on</h2>
+    <dl class="facts">
+      <div><dt>Element 72, Hf</dt><dd>A silvery, lustrous metal. Its periodic-table tile (72 · Hf · 178.49) is a ready-made badge.</dd></div>
+      <div><dt>Named after Copenhagen</dt><dd>Hafnia is the Latin name for Copenhagen, and <i>havn</i> means harbour: København is the “merchants’ harbour”. Things arrive there and are kept safe.</dd></div>
+      <div><dt>Found in Copenhagen, 1923</dt><dd>Dirk Coster and George de Hevesy discovered it at Niels Bohr’s institute, guided by Bohr’s atomic theory. The arcs of a Bohr atom echo the RSS feed waves.</dd></div>
+      <div><dt>Electron shells 2 · 8 · 18 · 32 · 10 · 2</dt><dd>Six shells around the nucleus. Three of them, cut to a quarter, are the feed symbol.</dd></div>
+      <div><dt>Copenhagen’s colours</dt><dd>Nyhavn’s ochre, red and blue houses on the water; copper spires gone verdigris green; the corkscrew spire of the Church of Our Saviour.</dd></div>
+      <div><dt>Hidden in plain sight</dt><dd>Hafnium oxide insulates the transistors in modern phone chips, so it is already inside the phone the app runs on. It hides in zirconium ore and was missed for decades.</dd></div>
+    </dl>
+  </section>
+
+  <section>
+    <h2>Round two: Hafnium and Copenhagen</h2>
+    <div class="grid" id="grid2"></div>
+  </section>
+
+  <section>
+    <h2>Round one</h2>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section>
+    <h2>On a home screen</h2>
+    <div class="walls">
+      <div class="wall light" id="wall-light" aria-label="Light wallpaper"></div>
+      <div class="wall dark" id="wall-dark" aria-label="Dark wallpaper"></div>
+    </div>
+  </section>
+
+  <section class="next">
+    <p><strong>What happens after you pick.</strong> I’ll refine the chosen draft, then export every size the stores and phones need: the 1024px App Store icon, the 512px Play Store icon, Android’s separate foreground, background and monochrome layers, the splash screen and the Play feature graphic.</p>
+    <p>On the home screen the label truncates to “Hafnium Re…” on most phones. A shorter label such as “Hafnium” can be set for the home screen while the store keeps the full name.</p>
+  </section>
+</div>
+
+<script>
+(() => {
+  const ROUND2 = [
+    { id: 'g-element', letter: 'G', title: 'Element tile', name: 'Hafnium Reader', why: 'The periodic-table tile for hafnium, 72 · Hf, on brushed metal, with the feed mark where the atomic mass would sit. Clear at every size.' },
+    { id: 'h-bohr', letter: 'H', title: 'Bohr feed', name: 'Hafnium Reader', why: 'A Bohr atom whose orbits, cut to a quarter, become the feed waves. Copenhagen physics and RSS in one mark.' },
+    { id: 'i-harbour', letter: 'I', title: 'Harbour', name: 'Hafnium Reader', why: 'Nyhavn’s gabled houses on the water with the feed rising above: Hafnia, the harbour where articles arrive.' },
+    { id: 'j-spire', letter: 'J', title: 'Copper spire', name: 'Hafnium Reader', why: 'A verdigris spire, like the Church of Our Saviour’s, sending out the feed waves. Copenhagen’s green and cream.' },
+  ];
+  const CONCEPTS = [
+    { id: 'a-lantern', letter: 'A', title: 'Lantern', name: 'Lantern', why: 'A lit lantern: reading that works when the network goes dark. Warm and distinctive on any wallpaper.' },
+    { id: 'b-quietfeed', letter: 'B', title: 'Quiet signal', name: 'Quietfeed', why: 'The familiar feed waves, fading out. Calm, on the app’s sepia paper colour. Reads clearly as RSS.' },
+    { id: 'c-offline', letter: 'C', title: 'Saved page', name: 'Offline Reader', why: 'A page with a download badge. The most literal: says “articles saved to your phone” at a glance.' },
+    { id: 'd-stack', letter: 'D', title: 'Unread stack', name: 'Any name', why: 'A stack of article cards with an unread dot. Neutral and app-like; works with any name.' },
+    { id: 'e-bookmark', letter: 'E', title: 'Bookmark', name: 'Any name', why: 'A bookmark ribbon carrying a feed wave. Reading and keeping, in the app’s orange.' },
+    { id: 'f-night', letter: 'F', title: 'Night reading', name: 'Quietfeed', why: 'Feed waves under a crescent moon. A night-time take on B, matching the dark theme.' },
+  ];
+  const src = (c) => `icons/${c.id}.svg`;
+  const esc = (s) => s.replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+
+  const card = (c) => `
+    <article class="concept" id="${c.letter}">
+      <div class="concept-head"><span class="letter">${c.letter}</span><h3>${esc(c.title)}</h3><span class="name">${esc(c.name)}</span></div>
+      <div class="masks">
+        <div class="mask"><div class="ios"><img src="${src(c)}" alt="${esc(c.title)} icon in the iPhone mask"></div>iPhone</div>
+        <div class="mask"><div class="android"><img src="${src(c)}" alt="${esc(c.title)} icon in Android's round crop"></div>Android</div>
+      </div>
+      <div class="sizes">
+        ${[60, 40, 29].map((s) => `<div class="mask"><div class="ios" style="width:${s}px;height:${s}px"><img src="${src(c)}" alt=""></div>${s}px</div>`).join('')}
+      </div>
+      <p class="why">${esc(c.why)}</p>
+    </article>`;
+  document.getElementById('grid2').innerHTML = ROUND2.map(card).join('');
+  document.getElementById('grid').innerHTML = CONCEPTS.map(card).join('');
+
+  const dummies = ['Maps', 'Notes', 'Music', 'Photos', 'Mail', 'Clock'];
+  // Round two on the home screens, labelled with the real name so you can see how the label truncates.
+  const wall = (el) => {
+    let html = '';
+    [...ROUND2, CONCEPTS[1]].forEach((c, i) => {
+      html += `<div class="app"><div class="ios"><img src="${src(c)}" alt="${c.letter}: ${esc(c.title)}"></div><span>Hafnium Reader</span></div>`;
+      if (i < 4) html += `<div class="app"><div class="dummy d${(i % 3) + 1}"></div><span>${dummies[i]}</span></div>`;
+    });
+    el.innerHTML = html;
+  };
+  wall(document.getElementById('wall-light'));
+  wall(document.getElementById('wall-dark'));
+})();
+</script>
