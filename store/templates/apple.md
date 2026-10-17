@@ -18,7 +18,7 @@ Read the blogs and sites you follow, even offline. No ads, no account, no tracki
 
 Already using another reader? Export your subscriptions as an OPML file from The Old Reader, Feedly, Inoreader or most other services, and import it into {{NAME}}. Your folders come along too. You can export your list again at any time from the share sheet.
 
-Adding feeds is easy: search a built-in directory of popular news, technology, science and Danish sources by name, or enter a website's address and {{NAME}} will find its feeds. It reads RSS 2.0, RSS 1.0 (RDF) and Atom.
+Adding feeds is easy: search a built-in directory of popular news, technology, science and Danish sources by name, search the web for any other site, or enter a website's address and {{NAME}} will find its feeds. It reads RSS 2.0, RSS 1.0 (RDF) and Atom.
 
 Reading
 • A clean article view with previous and next, star, mark read or unread, and share

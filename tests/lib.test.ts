@@ -6,6 +6,7 @@ import { DARK_PAGE_SCRIPT, declaresDarkSupport, hostOf, isAdNavigation, PAGE_FIL
 import { parseDate, parseFeed } from '../src/lib/feed';
 import { absolutizeUrls, discoverFeedLinks, discoverFeeds, htmlToText, httpsVariant, originOf, stripMedia, upgradeInsecureMedia } from '../src/lib/html';
 import { DIRECTORY, searchDirectory } from '../src/directory';
+import { guessDomain } from '../src/onlineSearch';
 
 const OLD_READER_OPML = `<?xml version="1.0" encoding="UTF-8"?>
 <opml version="1.0">
@@ -198,6 +199,15 @@ describe('page filter', () => {
     expect(PAGE_FILTER_SCRIPT).toContain('ins.adsbygoogle');
     expect(PAGE_FILTER_SCRIPT).toContain('window.open = function');
     expect(() => new Function(PAGE_FILTER_SCRIPT)).not.toThrow();
+  });
+});
+
+describe('online search helpers', () => {
+  it('guesses a .com address from a name', () => {
+    expect(guessDomain('Stratechery')).toBe('stratechery.com');
+    expect(guessDomain('The Oatmeal')).toBe('oatmeal.com');
+    expect(guessDomain('Ingeniøren')).toBe('ingenioren.com');
+    expect(guessDomain('dr')).toBeNull();
   });
 });
 
