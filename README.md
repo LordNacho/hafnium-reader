@@ -99,6 +99,10 @@ EAS will offer to generate and manage the signing credentials for both platforms
 - New *personal* developer accounts must run a closed test with at least 12 testers for 14 days before production access is granted.
 - Fill in the Data safety form ("No data collected") and the content rating questionnaire, and add a privacy policy URL.
 
+### Icon and store graphics
+
+The icon is the Round Tower (Rundetårn) in Copenhagen; its observatory dome is the feed dot. Sources are SVGs in `design/icon/`. `npm run icons` renders the iOS icon, the Android adaptive layers (foreground, background, monochrome), the splash image and favicon into `assets/`, and the App Store icon, Play icon and Play feature graphic into `store/assets/`. The feature graphic's text is already converted to outlines, so editing it means regenerating `design/icon/feature-graphic.svg`.
+
 ### Store text and website
 
 Listing text, the privacy policy and the support pages are templates in `store/templates/`, filled in from `store/config.json`. `npm run store` renders them into `store/out/` (paste into App Store Connect and Play Console) and `docs/` (the website), and checks every store character limit.

@@ -1,0 +1,32 @@
+<!-- Android themed (monochrome) icon: one-colour silhouette; the launcher tints it. Windows are cut out with a mask. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <mask id="windows">
+      <rect width="1024" height="1024" fill="#ffffff"/>
+      <g fill="#000000">
+        <path d="M396 990 v-44 a14 14 0 0 1 28 0 v44 Z"/>
+        <path d="M466 930 v-44 a14 14 0 0 1 28 0 v44 Z"/>
+        <path d="M536 870 v-44 a14 14 0 0 1 28 0 v44 Z"/>
+        <path d="M606 810 v-44 a14 14 0 0 1 28 0 v44 Z"/>
+        <path d="M396 760 v-44 a14 14 0 0 1 28 0 v44 Z"/>
+        <path d="M466 700 v-44 a14 14 0 0 1 28 0 v44 Z"/>
+        <path d="M536 640 v-44 a14 14 0 0 1 28 0 v44 Z"/>
+        <path d="M606 590 v-34 a14 14 0 0 1 28 0 v34 Z"/>
+        <rect x="352" y="534" width="320" height="10"/>
+      </g>
+    </mask>
+  </defs>
+  <g transform="translate(512 540) scale(.86) translate(-512 -540)" fill="#ffffff">
+    <g fill="none" stroke="#ffffff" stroke-width="44" stroke-linecap="round">
+      <path d="M512 320 A120 120 0 0 1 632 440"/>
+      <path d="M512 230 A210 210 0 0 1 722 440" opacity=".6"/>
+    </g>
+    <g mask="url(#windows)">
+      <rect x="352" y="530" width="320" height="560"/>
+      <rect x="340" y="510" width="344" height="24"/>
+    </g>
+    <path d="M352 510 V484 H672 V510 M392 510 V484 M432 510 V484 M472 510 V484 M552 510 V484 M592 510 V484 M632 510 V484" fill="none" stroke="#ffffff" stroke-width="6"/>
+    <rect x="467" y="452" width="90" height="58"/>
+    <path d="M452 442 A60 60 0 0 1 572 442 Z"/>
+  </g>
+</svg>

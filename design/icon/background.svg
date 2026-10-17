@@ -1,0 +1,16 @@
+<!-- Android adaptive icon background layer: night sky and stars. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1b2742"/>
+      <stop offset="1" stop-color="#0d1322"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#sky)"/>
+  <g fill="#f4ecd8">
+    <circle cx="300" cy="300" r="6" opacity=".7"/>
+    <circle cx="370" cy="230" r="4" opacity=".5"/>
+    <circle cx="740" cy="540" r="5" opacity=".6"/>
+    <circle cx="270" cy="460" r="4" opacity=".45"/>
+  </g>
+</svg>
