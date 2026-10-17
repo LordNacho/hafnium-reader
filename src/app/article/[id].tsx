@@ -81,7 +81,6 @@ export default function ArticleScreen() {
         onShouldStartLoadWithRequest={onNavigate}
         style={{ backgroundColor: colors.background }}
         setSupportMultipleWindows={false}
-        decelerationRate="normal"
       />
       <View style={[styles.toolbar, { borderColor: colors.border, backgroundColor: colors.surface }]}>
         <ToolbarButton label="‹ Prev" disabled={index <= 0} onPress={() => go(-1)} />
