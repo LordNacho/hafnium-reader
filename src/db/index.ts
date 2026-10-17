@@ -95,6 +95,7 @@ export interface ArticleSummary {
   sort_at: number;
   is_read: number;
   is_starred: number;
+  full_status: 'ok' | 'failed' | 'skipped' | null;
 }
 
 export interface Article extends ArticleSummary {
@@ -140,7 +141,7 @@ export async function listArticles(filter: ArticleFilter, limit = 500): Promise<
   const db = await getDb();
   const { sql, params } = whereFor(filter);
   return db.getAllAsync<ArticleSummary>(
-    `SELECT a.id, a.feed_id, f.title AS feed_title, a.title, a.preview, a.sort_at, a.is_read, a.is_starred
+    `SELECT a.id, a.feed_id, f.title AS feed_title, a.title, a.preview, a.sort_at, a.is_read, a.is_starred, a.full_status
      FROM articles a JOIN feeds f ON f.id = a.feed_id
      ${sql}
      ORDER BY a.sort_at DESC LIMIT ?`,

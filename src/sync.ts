@@ -282,15 +282,28 @@ async function onUnmeteredNetwork(): Promise<boolean> {
   }
 }
 
-let fullTextRun: Promise<number> | null = null;
+export interface FullTextBatchResult {
+  saved: number;
+  /** Articles that were looked at (downloaded or found not to need it). */
+  checked: number;
+  /** Set when nothing ran: the setting is off, or it is waiting for Wi-Fi. */
+  skippedBecause?: 'off' | 'not-on-wifi';
+}
+
+let fullTextRun: Promise<FullTextBatchResult> | null = null;
 
 /**
- * Download full articles for the newest unread (or starred) articles whose feed only gives a summary,
- * within the user's network setting. Returns how many were saved. Concurrent calls share one run.
+ * Download full articles for the newest unread (or starred) articles whose feed only gives a summary.
+ * Automatic runs respect the user's setting (off / Wi-Fi only); `manual` runs (the user asked) ignore it.
+ * Concurrent automatic calls share one run.
  */
-export function downloadFullTextBatch(): Promise<number> {
+export function downloadFullTextBatch(options: { manual?: boolean } = {}): Promise<FullTextBatchResult> {
+  if (options.manual) {
+    // Wait for any automatic run to finish, then run regardless of the network setting.
+    return (fullTextRun ?? Promise.resolve(null)).then(() => doFullTextBatch(true)).finally(notifyDataChanged);
+  }
   if (!fullTextRun) {
-    fullTextRun = doFullTextBatch().finally(() => {
+    fullTextRun = doFullTextBatch(false).finally(() => {
       fullTextRun = null;
       notifyDataChanged();
     });
@@ -298,10 +311,16 @@ export function downloadFullTextBatch(): Promise<number> {
   return fullTextRun;
 }
 
-async function doFullTextBatch(): Promise<number> {
+/** Whether automatic full-article downloads would run right now. */
+export async function fullTextWaitingForWifi(): Promise<boolean> {
   const settings = await loadSettings();
-  if (settings.fullText === 'off') return 0;
-  if (settings.fullText === 'wifi' && !(await onUnmeteredNetwork())) return 0;
+  return settings.fullText === 'wifi' && !(await onUnmeteredNetwork());
+}
+
+async function doFullTextBatch(manual: boolean): Promise<FullTextBatchResult> {
+  const settings = await loadSettings();
+  if (!manual && settings.fullText === 'off') return { saved: 0, checked: 0, skippedBecause: 'off' };
+  if (!manual && settings.fullText === 'wifi' && !(await onUnmeteredNetwork())) return { saved: 0, checked: 0, skippedBecause: 'not-on-wifi' };
 
   const db = await getDb();
   const candidates = await db.getAllAsync<{ id: number; url: string | null; content: string }>(
@@ -327,12 +346,13 @@ async function doFullTextBatch(): Promise<number> {
       if ((await downloadFullText(queue[next++])) === 'ok') {
         saved++;
         used = await storedBytes();
+        notifyDataChanged(); // lists show the "Full article" marker as each one lands
       }
     }
   };
   await Promise.all(Array.from({ length: Math.min(FULLTEXT_CONCURRENCY, queue.length) }, worker));
   await prune(settings);
-  return saved;
+  return { saved, checked: candidates.length };
 }
 
 function normalizeUrl(input: string): string {

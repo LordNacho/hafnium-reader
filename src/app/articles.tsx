@@ -85,6 +85,7 @@ export default function ArticlesScreen() {
                 {item.is_starred ? '★ ' : ''}
                 {filter.feedId ? '' : item.feed_title + ' · '}
                 {relativeTime(item.sort_at)}
+                {item.full_status === 'ok' ? ' · Full article' : ''}
               </Text>
             </View>
             <Text

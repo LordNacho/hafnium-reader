@@ -9,7 +9,7 @@ import { deleteReadArticles, storageStats } from '../db';
 import { notifyDataChanged, useDataVersion } from '../events';
 import { buildOpml, parseOpml } from '../lib/opml';
 import { DEFAULT_SETTINGS, loadSettings, saveSetting, type Settings, type ThemeName } from '../settings';
-import { downloadFullTextBatch, exportFeeds, importFeeds, prune, syncAll } from '../sync';
+import { downloadFullTextBatch, exportFeeds, fullTextWaitingForWifi, importFeeds, prune, syncAll } from '../sync';
 import { SERIF_FONT, useColors, useFontSize } from '../theme';
 
 const THEMES: ThemeName[] = ['system', 'light', 'dark', 'sepia'];
@@ -32,6 +32,32 @@ export default function SettingsScreen() {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [stats, setStats] = useState<Awaited<ReturnType<typeof storageStats>> | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [fullTextBusy, setFullTextBusy] = useState(false);
+  const [fullTextResult, setFullTextResult] = useState<string | null>(null);
+  const [waitingForWifi, setWaitingForWifi] = useState(false);
+
+  useEffect(() => {
+    fullTextWaitingForWifi().then(setWaitingForWifi);
+  }, [settings.fullText, version]);
+
+  const downloadFullTextNow = async () => {
+    setFullTextBusy(true);
+    setFullTextResult(null);
+    try {
+      const r = await downloadFullTextBatch({ manual: true });
+      setFullTextResult(
+        r.saved > 0
+          ? `Saved ${r.saved} full article${r.saved === 1 ? '' : 's'}.`
+          : r.checked > 0
+            ? 'No more to download: the rest either already have their full text or the site didn’t offer more.'
+            : 'Nothing to download right now. Unread articles that only have a summary will be picked up after the next refresh.',
+      );
+    } catch (e) {
+      setFullTextResult(`Couldn’t download: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setFullTextBusy(false);
+    }
+  };
 
   useEffect(() => {
     loadSettings().then(setSettings);
@@ -127,8 +153,20 @@ export default function SettingsScreen() {
           format={(v) => FULLTEXT_LABELS[v]}
         />
         <Text style={[styles.note, { color: colors.muted }]}>
-          When a feed only gives a summary, the app downloads the linked article and keeps the readable text, newest unread first, until the storage limit is nearly reached. Text a site loads only when you tap, and paywalled articles, stay as summaries.
+          When a feed only gives a summary, the app downloads the linked article and keeps the readable text, newest unread first, until the storage limit is nearly reached. This runs after each refresh. Text a site loads only when you tap, and paywalled articles, stay as summaries.
         </Text>
+        {waitingForWifi && (
+          <Text style={[styles.note, { color: colors.muted }]}>Waiting for Wi-Fi: automatic downloads will start when you’re on Wi-Fi.</Text>
+        )}
+        {fullTextBusy ? (
+          <View style={styles.busy}>
+            <ActivityIndicator color={colors.accent} />
+            <Text style={{ color: colors.muted }}>Downloading full articles…</Text>
+          </View>
+        ) : (
+          <ActionRow label="Download full articles now" detail="Uses mobile data if you’re not on Wi-Fi." onPress={downloadFullTextNow} />
+        )}
+        {fullTextResult && <Text style={[styles.note, { color: colors.muted }]}>{fullTextResult}</Text>}
         {stats && (
           <Text style={[styles.note, { color: colors.muted }]}>
             {stats.feeds} feeds · {stats.articles} articles ({stats.unread} unread, {stats.starred} starred) · {(stats.bytes / 1_000_000).toFixed(1)} MB
