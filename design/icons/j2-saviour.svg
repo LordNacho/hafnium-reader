@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5fae99"/>
+      <stop offset="1" stop-color="#2c665a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <g transform="translate(40 40)">
+    <!-- feed waves from the gilded globe -->
+    <g fill="none" stroke="#f4ecd8" stroke-width="40" stroke-linecap="round">
+      <path d="M471 229 A100 100 0 0 1 471 371"/>
+      <path d="M527 173 A180 180 0 0 1 527 427" opacity=".55"/>
+    </g>
+    <!-- black spire wrapped by the gold outside staircase -->
+    <path d="M350 660 L400 330 L450 660 Z" fill="#1e2724"/>
+    <g stroke="#e8b54a" stroke-width="10" stroke-linecap="round">
+      <path d="M354 620 L446 596 M365 560 L435 540 M374 500 L426 484 M383 445 L417 434 M390 395 L410 388"/>
+    </g>
+    <path d="M400 334 V318" stroke="#e8b54a" stroke-width="8"/>
+    <circle cx="400" cy="300" r="22" fill="#f0a63a"/>
+    <!-- brick tower with a gold gallery and clock -->
+    <rect x="340" y="660" width="120" height="380" fill="#9a5a3c"/>
+    <rect x="330" y="650" width="140" height="24" rx="6" fill="#e8b54a"/>
+    <circle cx="400" cy="740" r="28" fill="#f4ecd8" stroke="#e8b54a" stroke-width="6"/>
+    <path d="M400 740 V722 M400 740 L412 748" stroke="#1e2724" stroke-width="5" stroke-linecap="round"/>
+    <rect x="384" y="820" width="32" height="60" rx="16" fill="#2c1d16"/>
+  </g>
+</svg>

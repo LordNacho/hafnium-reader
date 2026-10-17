@@ -50,6 +50,7 @@ h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: v
 .wall.dark .dummy { opacity: .35; }
 .app span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 
+.aside { margin: 12px 0 0; color: var(--muted); font-size: 13px; }
 .facts { margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px 24px; }
 .facts div { min-width: 0; }
 .facts dt { font-weight: 600; }
@@ -63,8 +64,14 @@ h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: v
 <div class="wrap">
   <header>
     <h1>Hafnium Reader icons</h1>
-    <p>Round two draws on hafnium and Copenhagen. Each icon is shown in the iPhone mask, in Android’s round crop (which only shows the middle two-thirds), at small sizes, and on home screens. Pick one by letter, or mix parts of two.</p>
+    <p>Round three builds on the copper spire with more Copenhagen landmarks. In each, the feed dot sits on the landmark’s high point. Every icon is shown in the iPhone mask, in Android’s round crop (which only shows the middle two-thirds), at small sizes, and on home screens. Pick one by letter, or mix parts of two.</p>
   </header>
+
+  <section>
+    <h2>Round three: Copenhagen landmarks</h2>
+    <div class="grid" id="grid3"></div>
+    <p class="aside">Android’s round crop clips the tips of some feed waves. The final icon gets its own Android layout, so ignore that when choosing.</p>
+  </section>
 
   <section>
     <h2>Material to draw on</h2>
@@ -75,6 +82,11 @@ h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: v
       <div><dt>Electron shells 2 · 8 · 18 · 32 · 10 · 2</dt><dd>Six shells around the nucleus. Three of them, cut to a quarter, are the feed symbol.</dd></div>
       <div><dt>Copenhagen’s colours</dt><dd>Nyhavn’s ochre, red and blue houses on the water; copper spires gone verdigris green; the corkscrew spire of the Church of Our Saviour.</dd></div>
       <div><dt>Hidden in plain sight</dt><dd>Hafnium oxide insulates the transistors in modern phone chips, so it is already inside the phone the app runs on. It hides in zirconium ore and was missed for decades.</dd></div>
+      <div><dt>Church of Our Saviour</dt><dd>A black and gold spire with a staircase winding round the outside up to a gilded globe. The green in draft J comes from the city’s copper roofs instead.</dd></div>
+      <div><dt>Round Tower</dt><dd>Rundetårn, from the 1640s: a brick observatory climbed by a spiral ramp instead of stairs, and Europe’s oldest working observatory.</dd></div>
+      <div><dt>Copper roofs</dt><dd>Verdigris domes and spires across the skyline: the Marble Church dome, Rosenborg, City Hall, and the Stock Exchange, whose spire burned in 2024 and is being rebuilt.</dd></div>
+      <div><dt>Nyhavn and the harbour</dt><dd>Flat-fronted pastel houses with pitched tile roofs, and tall-masted wooden ships on the canal. The Black Diamond library sits on the harbour front.</dd></div>
+      <div><dt>Off limits</dt><dd>The Little Mermaid statue is still under copyright held by the sculptor’s heirs, Tivoli is a trademark, and the city’s coat of arms is protected, so these are only borrowed as ideas.</dd></div>
     </dl>
   </section>
 
@@ -104,6 +116,14 @@ h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: v
 
 <script>
 (() => {
+  const ROUND3 = [
+    { id: 'j2-saviour', letter: 'J2', title: 'Our Saviour’s spire', name: 'Hafnium Reader', why: 'Draft J, true to the real church: a black spire wrapped by the gold outside staircase, a brick tower with its clock, and the gilded globe as the feed dot.' },
+    { id: 'k-roundtower', letter: 'K', title: 'Round Tower', name: 'Hafnium Reader', why: 'Rundetårn at night. The observatory dome is the feed dot and the waves rise into the sky. Copenhagen science, fitting for Hafnium Research.' },
+    { id: 'l-dome', letter: 'L', title: 'Copper dome', name: 'Hafnium Reader', why: 'The Marble Church’s verdigris dome, with the gold ball on its lantern sending out the feed. Calm and very clear at small sizes.' },
+    { id: 'm-nyhavn', letter: 'M', title: 'Nyhavn', name: 'Hafnium Reader', why: 'Nyhavn as it really looks: pitched-roof pastel houses and a two-masted ship, with the feed flying from the masthead. Charming, but busy when small.' },
+    { id: 'n-blackdiamond', letter: 'N', title: 'Black Diamond', name: 'Hafnium Reader', why: 'The Royal Library’s black building on the harbour, its glass atrium glowing and the feed rising from it. A library for a reading app.' },
+    { id: 'o-threetowers', letter: 'O', title: 'Three towers', name: 'Hafnium Reader', why: 'Three copper-roofed towers on the waves, after the city’s coat of arms without copying it. The feed flies from the central spire.' },
+  ];
   const ROUND2 = [
     { id: 'g-element', letter: 'G', title: 'Element tile', name: 'Hafnium Reader', why: 'The periodic-table tile for hafnium, 72 · Hf, on brushed metal, with the feed mark where the atomic mass would sit. Clear at every size.' },
     { id: 'h-bohr', letter: 'H', title: 'Bohr feed', name: 'Hafnium Reader', why: 'A Bohr atom whose orbits, cut to a quarter, become the feed waves. Copenhagen physics and RSS in one mark.' },
@@ -133,6 +153,7 @@ h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: v
       </div>
       <p class="why">${esc(c.why)}</p>
     </article>`;
+  document.getElementById('grid3').innerHTML = ROUND3.map(card).join('');
   document.getElementById('grid2').innerHTML = ROUND2.map(card).join('');
   document.getElementById('grid').innerHTML = CONCEPTS.map(card).join('');
 
@@ -140,9 +161,9 @@ h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: v
   // Round two on the home screens, labelled with the real name so you can see how the label truncates.
   const wall = (el) => {
     let html = '';
-    [...ROUND2, CONCEPTS[1]].forEach((c, i) => {
-      html += `<div class="app"><div class="ios"><img src="${src(c)}" alt="${c.letter}: ${esc(c.title)}"></div><span>Hafnium Reader</span></div>`;
-      if (i < 4) html += `<div class="app"><div class="dummy d${(i % 3) + 1}"></div><span>${dummies[i]}</span></div>`;
+    [...ROUND3, ROUND2[3]].forEach((c, i) => {
+      html += `<div class="app"><div class="ios"><img src="${src(c)}" alt="${c.letter}: ${esc(c.title)}"></div><span>${c.letter} · Hafnium</span></div>`;
+      if (i < 5) html += `<div class="app"><div class="dummy d${(i % 3) + 1}"></div><span>${dummies[i]}</span></div>`;
     });
     el.innerHTML = html;
   };

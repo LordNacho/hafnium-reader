@@ -1,0 +1,32 @@
+<!-- Android adaptive icon foreground layer: the tower and feed waves on transparent.
+     Launchers show only the middle ~2/3 (a circle of radius ~340 here); the dome, railing and waves sit inside it. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="brick" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#c47448"/>
+      <stop offset=".55" stop-color="#a65a36"/>
+      <stop offset="1" stop-color="#7a3f26"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(512 540) scale(.86) translate(-512 -540)">
+    <g fill="none" stroke="#ff8a4c" stroke-width="44" stroke-linecap="round">
+      <path d="M512 320 A120 120 0 0 1 632 440"/>
+      <path d="M512 230 A210 210 0 0 1 722 440" opacity=".5"/>
+    </g>
+    <rect x="352" y="530" width="320" height="560" fill="url(#brick)"/>
+    <rect x="340" y="510" width="344" height="24" fill="#e8b54a"/>
+    <path d="M352 510 V484 H672 V510 M392 510 V484 M432 510 V484 M472 510 V484 M552 510 V484 M592 510 V484 M632 510 V484" fill="none" stroke="#e8b54a" stroke-width="6"/>
+    <rect x="467" y="440" width="90" height="70" fill="#e7e2d6"/>
+    <path d="M452 442 A60 60 0 0 1 572 442 Z" fill="#c9ced6"/>
+    <g fill="#2a1a12">
+      <path d="M396 990 v-44 a14 14 0 0 1 28 0 v44 Z"/>
+      <path d="M466 930 v-44 a14 14 0 0 1 28 0 v44 Z"/>
+      <path d="M536 870 v-44 a14 14 0 0 1 28 0 v44 Z"/>
+      <path d="M606 810 v-44 a14 14 0 0 1 28 0 v44 Z"/>
+      <path d="M396 760 v-44 a14 14 0 0 1 28 0 v44 Z"/>
+      <path d="M466 700 v-44 a14 14 0 0 1 28 0 v44 Z"/>
+      <path d="M536 640 v-44 a14 14 0 0 1 28 0 v44 Z"/>
+      <path d="M606 590 v-34 a14 14 0 0 1 28 0 v34 Z"/>
+    </g>
+  </g>
+</svg>

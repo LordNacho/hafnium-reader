@@ -9,7 +9,16 @@ import { deleteReadArticles, storageStats } from '../db';
 import { notifyDataChanged, useDataVersion } from '../events';
 import { buildOpml, parseOpml } from '../lib/opml';
 import { DEFAULT_SETTINGS, loadSettings, saveSetting, type Settings, type ThemeName } from '../settings';
-import { exportFeeds, importFeeds, prune, syncAll } from '../sync';
+import {
+  downloadFullTextBatch,
+  exportFeeds,
+  fullTextCounts,
+  fullTextWaitingForWifi,
+  importFeeds,
+  prune,
+  syncAll,
+  type FullTextCounts,
+} from '../sync';
 import { SERIF_FONT, useColors, useFontSize } from '../theme';
 
 const THEMES: ThemeName[] = ['system', 'light', 'dark', 'sepia'];
@@ -17,6 +26,10 @@ const TEXT_SCALES = [0.85, 1, 1.15, 1.3, 1.5];
 const FONTS: Settings['readerFont'][] = ['sans', 'serif'];
 const SPACINGS: Settings['lineSpacing'][] = ['compact', 'normal', 'relaxed'];
 const capitalize = (s: string) => s[0].toUpperCase() + s.slice(1);
+const FULLTEXT_OPTIONS: Settings['fullText'][] = ['off', 'wifi', 'always'];
+const FULLTEXT_LABELS: Record<Settings['fullText'], string> = { off: 'Off', wifi: 'On Wi-Fi', always: 'Always' };
+const STORAGE_LIMITS = [50, 100, 250, 500, 1000, 0];
+const formatMB = (mb: number) => (mb === 0 ? 'No limit' : mb >= 1000 ? `${mb / 1000} GB` : `${mb} MB`);
 const ARTICLE_LIMITS = [25, 50, 100, 200, 500];
 const AGE_LIMITS = [7, 14, 30, 90, 365];
 const INTERVALS = [15, 30, 60, 180, 360, 720];
@@ -28,6 +41,38 @@ export default function SettingsScreen() {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [stats, setStats] = useState<Awaited<ReturnType<typeof storageStats>> | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [fullTextBusy, setFullTextBusy] = useState(false);
+  const [fullTextResult, setFullTextResult] = useState<string | null>(null);
+  const [waitingForWifi, setWaitingForWifi] = useState(false);
+  const [counts, setCounts] = useState<FullTextCounts | null>(null);
+
+  useEffect(() => {
+    fullTextWaitingForWifi().then(setWaitingForWifi);
+    fullTextCounts().then(setCounts);
+  }, [settings.fullText, version]);
+
+  const downloadFullTextNow = async () => {
+    setFullTextBusy(true);
+    setFullTextResult(null);
+    try {
+      const r = await downloadFullTextBatch({ manual: true });
+      const parts: string[] = [];
+      if (r.saved > 0) parts.push(`Saved ${r.saved} full article${r.saved === 1 ? '' : 's'}.`);
+      if (r.failed > 0) parts.push(`${r.failed} couldn’t be downloaded. ${r.firstError ?? ''}`.trim());
+      if (!parts.length) {
+        parts.push(
+          r.checked > 0
+            ? 'Nothing more to download: those articles’ feeds already include the full text, or the sites offered no more.'
+            : 'Every article already has its full text, or its feed includes it.',
+        );
+      }
+      setFullTextResult(parts.join(' '));
+    } catch (e) {
+      setFullTextResult(`Couldn’t download: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setFullTextBusy(false);
+    }
+  };
 
   useEffect(() => {
     loadSettings().then(setSettings);
@@ -40,7 +85,8 @@ export default function SettingsScreen() {
     setSettings((s) => ({ ...s, [key]: value }));
     await saveSetting(key, value);
     if (key === 'backgroundRefresh' || key === 'refreshIntervalMinutes') await configureBackgroundRefresh();
-    if (key === 'maxArticlesPerFeed' || key === 'maxAgeDays') {
+    if (key === 'fullText' && value !== 'off') downloadFullTextBatch().catch(() => {});
+    if (key === 'maxArticlesPerFeed' || key === 'maxAgeDays' || key === 'maxStorageMB') {
       await prune();
       notifyDataChanged();
     }
@@ -109,12 +155,42 @@ export default function SettingsScreen() {
 
       {section('Offline storage')}
       <View style={[styles.card, { backgroundColor: colors.surface }]}>
+        <Choice label="Storage limit" options={STORAGE_LIMITS} value={settings.maxStorageMB} onChange={(v) => update('maxStorageMB', v)} format={formatMB} />
+        <Text style={[styles.note, { color: colors.muted }]}>When articles take more space than this, the oldest are removed, read ones first.</Text>
         <Choice label="Keep per feed" unit="articles" options={ARTICLE_LIMITS} value={settings.maxArticlesPerFeed} onChange={(v) => update('maxArticlesPerFeed', v)} />
         <Choice label="Keep articles for" unit="days" options={AGE_LIMITS} value={settings.maxAgeDays} onChange={(v) => update('maxAgeDays', v)} />
         <Text style={[styles.note, { color: colors.muted }]}>Starred articles are always kept.</Text>
+        <Choice
+          label="Download full articles"
+          options={FULLTEXT_OPTIONS}
+          value={settings.fullText}
+          onChange={(v) => update('fullText', v)}
+          format={(v) => FULLTEXT_LABELS[v]}
+        />
+        <Text style={[styles.note, { color: colors.muted }]}>
+          When a feed only gives a summary, the app downloads the linked article and keeps the readable text, newest unread first, until the storage limit is nearly reached. This runs after each refresh. Text a site loads only when you tap, and paywalled articles, stay as summaries.
+        </Text>
+        {waitingForWifi && (
+          <Text style={[styles.note, { color: colors.muted }]}>Waiting for Wi-Fi: automatic downloads will start when you’re on Wi-Fi.</Text>
+        )}
+        {fullTextBusy ? (
+          <View style={styles.busy}>
+            <ActivityIndicator color={colors.accent} />
+            <Text style={{ color: colors.muted }}>Downloading full articles…</Text>
+          </View>
+        ) : (
+          <ActionRow label="Download full articles now" detail="Uses mobile data if you’re not on Wi-Fi." onPress={downloadFullTextNow} />
+        )}
+        {fullTextResult && <Text style={[styles.note, { color: colors.muted }]}>{fullTextResult}</Text>}
+        {counts && (
+          <Text style={[styles.note, { color: colors.muted }]}>
+            Full text: {counts.saved} saved · {counts.failed} failed · {counts.notNeeded} not needed · {counts.notTried} not tried yet
+          </Text>
+        )}
         {stats && (
           <Text style={[styles.note, { color: colors.muted }]}>
-            {stats.feeds} feeds · {stats.articles} articles ({stats.unread} unread, {stats.starred} starred) · {(stats.bytes / 1048576).toFixed(1)} MB
+            {stats.feeds} feeds · {stats.articles} articles ({stats.unread} unread, {stats.starred} starred) · {(stats.bytes / 1_000_000).toFixed(1)} MB
+            {settings.maxStorageMB > 0 ? ` of ${formatMB(settings.maxStorageMB)}` : ''}
           </Text>
         )}
         <ActionRow

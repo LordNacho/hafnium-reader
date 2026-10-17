@@ -18,11 +18,11 @@ Read the blogs and sites you follow, even offline. No ads, no account, no tracki
 
 Already using another reader? Export your subscriptions as an OPML file from The Old Reader, Feedly, Inoreader or most other services, and import it into {{NAME}}. Your folders come along too. You can export your list again at any time from the share sheet.
 
-Adding a single feed is easy: paste a feed address, or just the site's homepage, and {{NAME}} will look for its feed. It reads RSS 2.0, RSS 1.0 (RDF) and Atom.
+Adding feeds is easy: search a built-in directory of popular news, technology, science and Danish sources by name, search the web for any other site, or enter a website's address and {{NAME}} will find its feeds. It reads RSS 2.0, RSS 1.0 (RDF) and Atom.
 
 Reading
 • A clean article view with previous and next, star, mark read or unread, and share
-• Open the original page in the in-app browser
+• Open the original page with JavaScript off, so timed pop-ups and most ads don't appear
 • System, light, dark or sepia theme
 • Text size from 85% to 150% on top of your phone's setting, sans or serif font, compact, normal or relaxed line spacing, images on or off
 • Unread or all articles, mark all as read, folders, All articles and Starred
@@ -35,12 +35,14 @@ Staying up to date
 Keeping storage in check
 • Keep the newest 25 to 500 articles per feed, and articles from the last 7 to 365 days
 • Starred articles are never removed
+• Set a storage limit from 50 MB to 1 GB; the oldest articles make way for new ones
 • Delete read articles in one tap
+• Download full articles when a feed only gives a summary, on Wi-Fi or always
 
-Article text is stored for offline reading. Images load from the web when you're online.
+Article text is stored for offline reading. When a feed only gives a summary, the app can download the full article from the linked page as well. Images load from the web when you're online.
 
 Your privacy
-{{NAME}} doesn't collect anything. There is no analytics, no crash reporting and no tracking. The app connects only to the feeds and websites you add, directly from your device, and to pages you choose to open. Nothing is sent to the developer. Everything stays on your phone, and deleting the app deletes it.
+{{NAME}} doesn't collect anything. There is no analytics, no crash reporting and no tracking. The app connects only to the feeds and websites you add and the articles they link to, directly from your device, and to pages you choose to open. Nothing is sent to the developer. Everything stays on your phone, and deleting the app deletes it.
 
 {{NAME}} is free, with no in-app purchases.
 
@@ -50,7 +52,7 @@ atom,opml,blog,blogs,ad-free,private,rdf,subscribe,articles,headlines,aggregator
 
 ## What's New
 
-The first release of {{NAME}}. Add feeds by address or homepage, import your subscriptions from OPML, and read your articles offline, with no ads and no account.
+The first release of {{NAME}}. Add feeds by name from a built-in directory or by website address, import your subscriptions from OPML, and read your articles offline, with no ads and no account.
 
 ## Support URL
 
@@ -77,10 +79,11 @@ Data Not Collected. Everything is stored on the device, and the app has no analy
 
 ## Review Notes
 
-No login or account is needed. A fresh install has no feeds, so please add one to try the app:
+No login or account is needed. A fresh install has no feeds; to see content straight away:
 
-1. Tap Add and paste a feed address, for example https://www.theverge.com/rss/index.xml or https://xkcd.com/atom.xml (a site's homepage also works; the app looks for its feed).
-2. Alternatively, import an OPML subscription file from the Files app.
+1. On the Feeds screen, tap "Start with sample feeds". This subscribes to six public feeds (news, technology, science, comics) and downloads their articles.
+2. Or tap Add and paste a feed address, for example https://xkcd.com/atom.xml (a site's homepage also works; the app looks for its feed).
+3. Or import an OPML subscription file from the Files app.
 
 Articles are stored on the device and can be read offline once downloaded. Background refresh is scheduled by iOS and needs a physical device; it does not run reliably in the Simulator.
 

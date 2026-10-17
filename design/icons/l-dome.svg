@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f4e4cf"/>
+      <stop offset="1" stop-color="#e6c3a0"/>
+    </linearGradient>
+    <linearGradient id="copper" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#78c2ab"/>
+      <stop offset=".6" stop-color="#4f9c8a"/>
+      <stop offset="1" stop-color="#357565"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <g transform="translate(0 80)">
+    <!-- feed waves from the gold ball on the lantern -->
+    <g fill="none" stroke="#d9480f" stroke-width="40" stroke-linecap="round">
+      <path d="M512 238 A90 90 0 0 1 602 328"/>
+      <path d="M512 163 A165 165 0 0 1 677 328" opacity=".5"/>
+    </g>
+    <!-- base and drum with columns -->
+    <rect x="262" y="800" width="500" height="224" fill="#e3d8c3"/>
+    <rect x="252" y="790" width="520" height="22" fill="#d6c9ae"/>
+    <rect x="292" y="640" width="440" height="150" fill="#efe6d6"/>
+    <path d="M320 650 V780 M360 650 V780 M400 650 V780 M440 650 V780 M480 650 V780 M544 650 V780 M584 650 V780 M624 650 V780 M664 650 V780 M704 650 V780" stroke="#cbbfa8" stroke-width="10"/>
+    <!-- verdigris dome with ribs -->
+    <path d="M302 640 A210 210 0 0 1 722 640 Z" fill="url(#copper)"/>
+    <g fill="none" stroke="#b6e3d4" stroke-width="8" opacity=".65">
+      <path d="M512 430 A70 210 0 0 1 582 640"/>
+      <path d="M512 430 A70 210 0 0 0 442 640"/>
+      <path d="M512 430 A140 210 0 0 1 652 640"/>
+      <path d="M512 430 A140 210 0 0 0 372 640"/>
+      <path d="M512 430 V640"/>
+    </g>
+    <!-- lantern, small dome and gold ball -->
+    <rect x="484" y="372" width="56" height="62" fill="#efe6d6"/>
+    <path d="M478 374 A34 34 0 0 1 546 374 Z" fill="#4f9c8a"/>
+    <circle cx="512" cy="328" r="22" fill="#e79b2e"/>
+  </g>
+</svg>

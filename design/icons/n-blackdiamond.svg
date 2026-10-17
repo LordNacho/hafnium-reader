@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#b9c9d8"/>
+      <stop offset="1" stop-color="#ecdcc8"/>
+    </linearGradient>
+    <g id="library">
+      <path d="M250 380 L500 350 L500 560 L270 560 Z" fill="#121417"/>
+      <path d="M540 345 L770 400 L750 560 L540 560 Z" fill="#1c2026"/>
+      <path d="M500 350 L540 345 L540 560 L500 560 Z" fill="#ffb36b"/>
+      <path d="M250 380 L500 350 L500 380 L262 410 Z" fill="#ffffff" opacity=".08"/>
+    </g>
+  </defs>
+  <rect width="1024" height="560" fill="url(#sky)"/>
+  <rect y="560" width="1024" height="464" fill="#26425e"/>
+  <!-- the Black Diamond: two leaning black blocks split by a glowing glass atrium -->
+  <use href="#library"/>
+  <g transform="translate(0 1120) scale(1 -1)" opacity=".32">
+    <use href="#library"/>
+  </g>
+  <g stroke="#ffffff" stroke-width="6" stroke-linecap="round" opacity=".25">
+    <path d="M260 640 H420 M560 660 H740 M320 720 H500 M600 740 H720 M380 820 H560"/>
+  </g>
+  <!-- feed rising from the atrium -->
+  <g fill="none" stroke="#d9480f" stroke-width="34" stroke-linecap="round">
+    <path d="M520 250 A70 70 0 0 1 590 320"/>
+    <path d="M520 195 A125 125 0 0 1 645 320" opacity=".5"/>
+  </g>
+  <circle cx="520" cy="320" r="24" fill="#d9480f"/>
+</svg>

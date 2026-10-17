@@ -12,6 +12,12 @@ export interface Settings {
   wifiOnly: boolean;
   /** Article lists hide read articles. */
   unreadOnly: boolean;
+  /** Download the linked page for articles whose feed only gives a summary. */
+  fullText: 'off' | 'wifi' | 'always';
+  /** Over this, the oldest articles are dropped (read before unread; starred kept). 0 = no limit. */
+  maxStorageMB: number;
+  /** Sites the user allowed to run JavaScript in the page viewer (host names). */
+  jsSites: string[];
   theme: ThemeName;
   /** Multiplier on top of the phone's own text-size setting. */
   textScale: number;
@@ -31,6 +37,9 @@ export const DEFAULT_SETTINGS: Settings = {
   backgroundRefresh: true,
   wifiOnly: false,
   unreadOnly: true,
+  fullText: 'wifi',
+  maxStorageMB: 100,
+  jsSites: [],
   theme: 'system',
   textScale: 1,
   readerFont: 'sans',

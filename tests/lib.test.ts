@@ -1,7 +1,12 @@
 /// <reference types="jest" />
 import { buildOpml, parseOpml } from '../src/lib/opml';
+import { SAMPLE_FEEDS } from '../src/sampleFeeds';
+import { extractArticle, isWorthKeeping, looksLikeSummary } from '../src/lib/fulltext';
+import { DARK_PAGE_SCRIPT, declaresDarkSupport, hostOf, isAdNavigation, PAGE_FILTER_SCRIPT, preparePageHtml } from '../src/lib/pageFilter';
 import { parseDate, parseFeed } from '../src/lib/feed';
-import { absolutizeUrls, discoverFeedLinks, htmlToText, httpsVariant, stripMedia, upgradeInsecureMedia } from '../src/lib/html';
+import { absolutizeUrls, discoverFeedLinks, discoverFeeds, htmlToText, httpsVariant, originOf, stripMedia, upgradeInsecureMedia } from '../src/lib/html';
+import { DIRECTORY, searchDirectory } from '../src/directory';
+import { guessDomain } from '../src/onlineSearch';
 
 const OLD_READER_OPML = `<?xml version="1.0" encoding="UTF-8"?>
 <opml version="1.0">
@@ -108,11 +113,145 @@ describe('feed parsing', () => {
   });
 });
 
+describe('full-text extraction', () => {
+  const paragraph = (n: number) =>
+    `<p>Paragraph ${n} of the story. The harbour froze early this year, and the ferries ran late for a week while the ice breakers worked through the channel near the old customs house.</p>`;
+  const page = `<!doctype html><html><head><title>Ferries</title></head><body>
+    <nav><a href="/">Home</a> <a href="/news">News</a> <a href="/sport">Sport</a></nav>
+    <div class="ad">Buy now! Limited offer!</div>
+    <article><h1>Ferries run late as harbour freezes</h1>${Array.from({ length: 8 }, (_, i) => paragraph(i + 1)).join('')}
+      <img src="/img/ice.jpg"></article>
+    <footer>Comments (12) · Share · Cookie settings</footer></body></html>`;
+
+  it('keeps the article body and drops the page furniture', () => {
+    const a = extractArticle(page, 'https://news.example/2026/ferries');
+    expect(a).not.toBeNull();
+    expect(a!.content).toContain('Paragraph 8 of the story');
+    expect(a!.content).not.toContain('Limited offer');
+    expect(a!.content).not.toContain('Cookie settings');
+    expect(a!.content).toContain('https://news.example/img/ice.jpg');
+    expect(a!.textLength).toBeGreaterThan(1000);
+  });
+
+  it('reveals text hidden behind a "read more" button', () => {
+    const collapsed = `<html><body><article><h1>Ferries</h1>${paragraph(1)}${paragraph(2)}
+      <div class="article-truncated" hidden>${Array.from({ length: 6 }, (_, i) => paragraph(i + 3)).join('')}</div>
+      <button class="btn">Read more</button></article></body></html>`;
+    const a = extractArticle(collapsed, 'https://news.example/a')!;
+    expect(a.content).toContain('Paragraph 8 of the story');
+    expect(a.content).not.toContain('Read more');
+  });
+
+  it('uses structured-data articleBody when it is the longer text', () => {
+    const body = Array.from({ length: 10 }, (_, i) => `Line ${i + 1} of the full story about the frozen harbour and the late ferries.`).join('\n\n');
+    const teaser = `<html><head><script type="application/ld+json">${JSON.stringify({ '@type': 'NewsArticle', articleBody: body })}</script></head>
+      <body><article><h1>Ferries</h1>${paragraph(1)}</article></body></html>`;
+    const a = extractArticle(teaser, 'https://news.example/b')!;
+    expect(a.content).toContain('<p>Line 10 of the full story');
+  });
+
+  it('does not unhide or lift text from paywalled articles', () => {
+    const body = Array.from({ length: 10 }, (_, i) => `Paid line ${i + 1} of the members-only story.`).join('\n\n');
+    const paid = `<html><head><script type="application/ld+json">${JSON.stringify({ '@type': 'NewsArticle', isAccessibleForFree: false, articleBody: body })}</script></head>
+      <body><article><h1>Ferries</h1>${paragraph(1)}${paragraph(2)}<div class="read-more-content" hidden>${paragraph(99)}</div></article></body></html>`;
+    const a = extractArticle(paid, 'https://news.example/c');
+    expect(a?.content ?? '').not.toContain('Paid line');
+    expect(a?.content ?? '').not.toContain('Paragraph 99');
+  });
+
+  it('treats short feed text as a summary', () => {
+    expect(looksLikeSummary('<p>Ferries run late. Read more…</p>')).toBe(true);
+    expect(looksLikeSummary(`<div>${paragraph(1).repeat(12)}</div>`)).toBe(false);
+  });
+
+  it('only keeps pages that add real text over the feed', () => {
+    const extracted = { content: '', textLength: 4000 };
+    expect(isWorthKeeping(extracted, '<p>Short teaser.</p>')).toBe(true);
+    expect(isWorthKeeping(extracted, `<p>${'x'.repeat(3500)}</p>`)).toBe(false);
+    expect(isWorthKeeping({ content: '', textLength: 300 }, '<p>Hi</p>')).toBe(false);
+  });
+});
+
+describe('page filter', () => {
+  it('reads host names without relying on URL()', () => {
+    expect(hostOf('https://www.bbc.co.uk/news/world-123?x=1')).toBe('bbc.co.uk');
+    expect(hostOf('http://user@Example.COM:8080/a')).toBe('example.com');
+    expect(hostOf('not a url')).toBe('');
+  });
+  it('blocks navigations to ad networks only', () => {
+    expect(isAdNavigation('https://ad.doubleclick.net/clk;123')).toBe(true);
+    expect(isAdNavigation('https://www.taboola.com/redirect?u=x')).toBe(true);
+    expect(isAdNavigation('https://www.theguardian.com/world/2026/oct/17/story')).toBe(false);
+    expect(isAdNavigation('https://notdoubleclick.net.example.org/')).toBe(false);
+  });
+  it('darkens downloaded pages unless they have their own dark design', () => {
+    const light = '<html><head><title>x</title></head><body><a href="/b">b</a></body></html>';
+    const out = preparePageHtml(light, 'https://news.example/a', true);
+    expect(out).toContain('<head><base href="https://news.example/a"><style id="hafnium-dark">');
+    expect(preparePageHtml(light, 'https://news.example/a', false)).not.toContain('hafnium-dark');
+    const darkAware = '<html><head><style>@media (prefers-color-scheme: dark) { body { background: #000 } }</style></head></html>';
+    expect(declaresDarkSupport(darkAware)).toBe(true);
+    expect(preparePageHtml(darkAware, 'https://news.example/a', true)).not.toContain('hafnium-dark');
+    expect(preparePageHtml('<p>no head</p>', 'https://x.example/', true).startsWith('<base href="https://x.example/">')).toBe(true);
+    expect(() => new Function(DARK_PAGE_SCRIPT)).not.toThrow();
+  });
+  it('builds a filter script that hides ads and blocks pop-up windows', () => {
+    expect(PAGE_FILTER_SCRIPT).toContain('ins.adsbygoogle');
+    expect(PAGE_FILTER_SCRIPT).toContain('window.open = function');
+    expect(() => new Function(PAGE_FILTER_SCRIPT)).not.toThrow();
+  });
+});
+
+describe('online search helpers', () => {
+  it('guesses a .com address from a name', () => {
+    expect(guessDomain('Stratechery')).toBe('stratechery.com');
+    expect(guessDomain('The Oatmeal')).toBe('oatmeal.com');
+    expect(guessDomain('Ingeniøren')).toBe('ingenioren.com');
+    expect(guessDomain('dr')).toBeNull();
+  });
+});
+
+describe('feed directory', () => {
+  it('finds feeds by name, nickname and Danish spelling', () => {
+    expect(searchDirectory('guardian').map((f) => f.title)).toContain('The Guardian – World');
+    expect(searchDirectory('guardian science')[0].title).toBe('The Guardian – Science');
+    expect(searchDirectory('dr nyheder').length).toBeGreaterThan(0);
+    expect(searchDirectory('ingenioren')[0].title).toBe('Ingeniøren');
+    expect(searchDirectory('nyt').some((f) => f.title.startsWith('The New York Times'))).toBe(true);
+    expect(searchDirectory('   ')).toEqual([]);
+  });
+  it('has unique https addresses', () => {
+    const urls = DIRECTORY.map((f) => f.url);
+    expect(new Set(urls).size).toBe(urls.length);
+    expect(urls.every((u) => u.startsWith('https://'))).toBe(true);
+  });
+});
+
+describe('sample feeds', () => {
+  it('are unique https feeds in named folders', () => {
+    const urls = SAMPLE_FEEDS.map((f) => f.url);
+    expect(new Set(urls).size).toBe(urls.length);
+    for (const f of SAMPLE_FEEDS) {
+      expect(f.url).toMatch(/^https:\/\//);
+      expect(f.folder).toBeTruthy();
+    }
+  });
+});
+
 describe('html helpers', () => {
   it('discovers feed links', () => {
     const html = `<head><link rel="stylesheet" href="s.css"><link rel="alternate" type="application/rss+xml" title="RSS" href="/feed.xml">
       <link type='application/atom+xml' rel='alternate' href='https://a.com/atom'></head>`;
     expect(discoverFeedLinks(html, 'https://a.com/blog/')).toEqual(['https://a.com/feed.xml', 'https://a.com/atom']);
+  });
+  it('discovers feed titles and origins', () => {
+    const html = `<link rel="alternate" type="application/rss+xml" title="World &amp; Europe" href="/world/rss"><link rel="alternate" type="application/atom+xml" href="/atom">`;
+    expect(discoverFeeds(html, 'https://news.example/')).toEqual([
+      { url: 'https://news.example/world/rss', title: 'World & Europe' },
+      { url: 'https://news.example/atom', title: null },
+    ]);
+    expect(originOf('https://www.example.com:8443/a/b?c')).toBe('https://www.example.com:8443');
+    expect(originOf('nope')).toBeNull();
   });
   it('absolutizes relative URLs only', () => {
     expect(absolutizeUrls(`<img src="/a.png"><a href='b'>x</a><a href="#top"></a><img src="data:x"><a href="mailto:z">`, 'https://s.com/p/q'))

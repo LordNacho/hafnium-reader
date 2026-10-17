@@ -6,7 +6,7 @@ import * as SQLite from 'expo-sqlite';
  */
 let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 export function getDb(): Promise<SQLite.SQLiteDatabase> {
   if (!dbPromise) {
@@ -64,6 +64,14 @@ async function migrate(db: SQLite.SQLiteDatabase) {
       CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
     `);
   }
+  if (version < 2) {
+    // Full articles downloaded from the linked page; full_status is 'ok' | 'failed' | 'skipped' (feed text is enough).
+    await db.execAsync(`
+      ALTER TABLE articles ADD COLUMN full_content TEXT;
+      ALTER TABLE articles ADD COLUMN full_status TEXT;
+      ALTER TABLE articles ADD COLUMN full_fetched_at INTEGER;
+    `);
+  }
   await db.execAsync(`PRAGMA user_version = ${SCHEMA_VERSION}`);
 }
 
@@ -87,12 +95,15 @@ export interface ArticleSummary {
   sort_at: number;
   is_read: number;
   is_starred: number;
+  full_status: 'ok' | 'failed' | 'skipped' | null;
 }
 
 export interface Article extends ArticleSummary {
   url: string | null;
   author: string | null;
   content: string;
+  full_content: string | null;
+  full_status: 'ok' | 'failed' | 'skipped' | null;
 }
 
 export type ArticleFilter = { feedId?: number; folder?: string; starred?: boolean; unreadOnly?: boolean };
@@ -130,7 +141,7 @@ export async function listArticles(filter: ArticleFilter, limit = 500): Promise<
   const db = await getDb();
   const { sql, params } = whereFor(filter);
   return db.getAllAsync<ArticleSummary>(
-    `SELECT a.id, a.feed_id, f.title AS feed_title, a.title, a.preview, a.sort_at, a.is_read, a.is_starred
+    `SELECT a.id, a.feed_id, f.title AS feed_title, a.title, a.preview, a.sort_at, a.is_read, a.is_starred, a.full_status
      FROM articles a JOIN feeds f ON f.id = a.feed_id
      ${sql}
      ORDER BY a.sort_at DESC LIMIT ?`,
@@ -183,7 +194,7 @@ export async function storageStats(): Promise<{ feeds: number; articles: number;
            COUNT(*) AS articles,
            COALESCE(SUM(is_read = 0), 0) AS unread,
            COALESCE(SUM(is_starred = 1), 0) AS starred,
-           COALESCE(SUM(LENGTH(content) + LENGTH(preview)), 0) AS bytes
+           COALESCE(SUM(LENGTH(content) + LENGTH(preview) + LENGTH(COALESCE(full_content, ''))), 0) AS bytes
     FROM articles`);
   return row ?? { feeds: 0, articles: 0, unread: 0, starred: 0, bytes: 0 };
 }
