@@ -77,10 +77,11 @@ Data Not Collected. Everything is stored on the device, and the app has no analy
 
 ## Review Notes
 
-No login or account is needed. A fresh install has no feeds, so please add one to try the app:
+No login or account is needed. A fresh install has no feeds; to see content straight away:
 
-1. Tap Add and paste a feed address, for example https://www.theverge.com/rss/index.xml or https://xkcd.com/atom.xml (a site's homepage also works; the app looks for its feed).
-2. Alternatively, import an OPML subscription file from the Files app.
+1. On the Feeds screen, tap "Start with sample feeds". This subscribes to six public feeds (news, technology, science, comics) and downloads their articles.
+2. Or tap Add and paste a feed address, for example https://xkcd.com/atom.xml (a site's homepage also works; the app looks for its feed).
+3. Or import an OPML subscription file from the Files app.
 
 Articles are stored on the device and can be read offline once downloaded. Background refresh is scheduled by iOS and needs a physical device; it does not run reliably in the Simulator.
 

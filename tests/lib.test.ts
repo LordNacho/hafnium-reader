@@ -1,5 +1,6 @@
 /// <reference types="jest" />
 import { buildOpml, parseOpml } from '../src/lib/opml';
+import { SAMPLE_FEEDS } from '../src/sampleFeeds';
 import { parseDate, parseFeed } from '../src/lib/feed';
 import { absolutizeUrls, discoverFeedLinks, htmlToText, httpsVariant, stripMedia, upgradeInsecureMedia } from '../src/lib/html';
 
@@ -105,6 +106,17 @@ describe('feed parsing', () => {
     expect(parseDate('Mon, 5 Oct 26 12:00 EST')).toBe(Date.UTC(2026, 9, 5, 17));
     expect(parseDate('2026-10-05')).toBe(Date.UTC(2026, 9, 5));
     expect(parseDate('garbage')).toBeNull();
+  });
+});
+
+describe('sample feeds', () => {
+  it('are unique https feeds in named folders', () => {
+    const urls = SAMPLE_FEEDS.map((f) => f.url);
+    expect(new Set(urls).size).toBe(urls.length);
+    for (const f of SAMPLE_FEEDS) {
+      expect(f.url).toMatch(/^https:\/\//);
+      expect(f.folder).toBeTruthy();
+    }
   });
 });
 

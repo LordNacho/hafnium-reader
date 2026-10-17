@@ -1,9 +1,10 @@
 import { Link, router, Stack } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Pressable, RefreshControl, SectionList, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, RefreshControl, SectionList, StyleSheet, Text, View } from 'react-native';
 import { deleteFeed, listFeeds, markAllRead, type Feed } from '../db';
 import { useDataVersion } from '../events';
-import { syncAll } from '../sync';
+import { SAMPLE_FEEDS } from '../sampleFeeds';
+import { importFeeds, syncAll } from '../sync';
 import { relativeTime, useColors, useFontSize } from '../theme';
 
 type Row =
@@ -16,6 +17,7 @@ export default function FeedsScreen() {
   const version = useDataVersion();
   const [feeds, setFeeds] = useState<Feed[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadingSamples, setLoadingSamples] = useState(false);
 
   useEffect(() => {
     listFeeds().then(setFeeds);
@@ -51,6 +53,19 @@ export default function FeedsScreen() {
       })),
     ];
   }, [feeds]);
+
+  const startWithSamples = async () => {
+    setLoadingSamples(true);
+    try {
+      await importFeeds(SAMPLE_FEEDS);
+      const r = await syncAll();
+      if (r.errors) Alert.alert('Sample feeds added', `${r.newArticles} articles downloaded. ${r.errors} feed(s) couldn’t be reached; they’ll retry on the next refresh.`);
+    } catch (e) {
+      Alert.alert('Couldn’t add sample feeds', e instanceof Error ? e.message : String(e));
+    } finally {
+      setLoadingSamples(false);
+    }
+  };
 
   const feedMenu = (feed: Feed) =>
     Alert.alert(feed.title, feed.last_error ? `Last error: ${feed.last_error}` : feed.url, [
@@ -146,6 +161,20 @@ export default function FeedsScreen() {
               <Text style={[styles.sub, { color: colors.muted, textAlign: 'center' }]}>
                 Import an OPML file from The Old Reader in Settings, or tap Add to subscribe to a site.
               </Text>
+              <Pressable
+                onPress={startWithSamples}
+                disabled={loadingSamples}
+                style={[styles.sampleButton, { backgroundColor: colors.accent, opacity: loadingSamples ? 0.6 : 1 }]}
+              >
+                {loadingSamples ? (
+                  <ActivityIndicator color={colors.isDark ? colors.background : '#ffffff'} />
+                ) : (
+                  <Text style={[styles.sampleButtonText, { color: colors.isDark ? colors.background : '#ffffff' }]}>Start with sample feeds</Text>
+                )}
+              </Pressable>
+              <Text style={[styles.sub, { color: colors.muted, textAlign: 'center' }]}>
+                Adds {SAMPLE_FEEDS.length} feeds on news, technology, science and comics. Unsubscribe from any of them later.
+              </Text>
             </View>
           ) : undefined
         }
@@ -176,4 +205,6 @@ const styles = StyleSheet.create({
   badgeText: { fontSize: 13, fontVariant: ['tabular-nums'] },
   empty: { padding: 32, alignItems: 'center', gap: 8 },
   emptyTitle: { fontSize: 18, fontWeight: '600' },
+  sampleButton: { marginTop: 12, borderRadius: 8, paddingVertical: 12, paddingHorizontal: 20, minWidth: 240, alignItems: 'center' },
+  sampleButtonText: { fontSize: 16, fontWeight: '600' },
 });
