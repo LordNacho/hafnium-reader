@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Privacy policy for Quietfeed, an RSS reader that collects no data.">
+  <title>Privacy Policy - Quietfeed</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header>
+    <a class="brand" href="index.html">Quietfeed</a>
+    <nav aria-label="Site">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="support.html">Support</a></li>
+        <li><a href="privacy.html" aria-current="page">Privacy</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main id="main">
+    <h1>Privacy Policy</h1>
+    <p class="meta">Last updated: 2026-10-17</p>
+
+    <p>Quietfeed is an RSS reader for iPhone and Android, made by {{DEVELOPER_NAME}}. The short version: the app does not collect any information about you. Nothing you do in the app is sent to us.</p>
+
+    <h2>What the app stores, and where</h2>
+    <p>Everything the app keeps is stored on your device, in the app's own private storage. That includes:</p>
+    <ul>
+      <li>the feeds and folders you add or import;</li>
+      <li>the articles downloaded from those feeds, so you can read them offline;</li>
+      <li>which articles you have read or starred;</li>
+      <li>your settings, such as theme, text size and refresh options.</li>
+    </ul>
+    <p>We cannot see any of this. It is not copied to our servers, because we do not run any servers for the app.</p>
+
+    <h2>Phone backups</h2>
+    <p>Your phone's own backup may include the app's data (subscriptions, saved articles and settings): iCloud Backup on iPhone, or Android's backup to your Google account. Whether those backups happen is up to you and your phone's settings, and they are handled by Apple or Google under your account. We have no access to them. The app does not sync data between devices.</p>
+
+    <h2>What network requests the app makes</h2>
+    <p>The app only connects to:</p>
+    <ul>
+      <li><strong>The feeds and websites you add.</strong> When you add a feed, or when the app refreshes (when you open it, or in the background if your phone allows), it downloads the feed directly from that site. If you paste a website's homepage, the app also loads that page to find its feed. Images in articles are loaded from the sites that host them when you view them.</li>
+      <li><strong>Pages you choose to open.</strong> If you open an article's original page, it loads in an in-app browser, directly from that website.</li>
+    </ul>
+    <p>These requests go straight from your device to those sites. Like any web request, they reveal your device's IP address to that site, along with a short identifier for the app (<code>RSSReader/1.0 (+personal feed reader)</code>). Each site handles that information under its own privacy policy. To save data, the app may also send the site the standard caching details it was given last time (ETag and Last-Modified), so the site can reply "nothing has changed".</p>
+    <p>Requests use whatever address the feed or page has: HTTPS where the site supports it.</p>
+
+    <h2>What we collect</h2>
+    <p>Nothing. The app has no accounts, no analytics, no crash reporting, no advertising and no tracking, and it includes no third-party services or SDKs that collect data. We do not sell, share or receive any personal information.</p>
+
+    <h2>Importing and exporting</h2>
+    <p>When you import an OPML file, the app reads the file you pick and saves the subscriptions on your device. When you export, the app creates an OPML file and hands it to your phone's share sheet; where it goes from there is up to you.</p>
+
+    <h2>Deleting your data</h2>
+    <p>Because everything is stored on your device, deleting the app removes all of its data. Inside the app you can also delete read articles and limit how many articles are kept. Data in your phone's own backups is managed in your iCloud or Google account settings.</p>
+
+    <h2>Children</h2>
+    <p>The app is not directed at children and does not knowingly collect information from anyone, including children under 13.</p>
+
+    <h2>Changes to this policy</h2>
+    <p>If this policy changes, the updated version will be posted on this page with a new "last updated" date. If a future version of the app ever needed to collect any data, this page would say so clearly before that version is released.</p>
+
+    <h2>Contact</h2>
+    <p>Questions about privacy? Email <a href="mailto:{{SUPPORT_EMAIL}}">{{SUPPORT_EMAIL}}</a>.</p>
+  </main>
+  <footer>
+    <p>Quietfeed by {{DEVELOPER_NAME}} &middot; <a href="support.html">Support</a></p>
+  </footer>
+</body>
+</html>

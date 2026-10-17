@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Help and frequently asked questions for {{NAME}}.">
+  <title>Support - {{NAME}}</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header>
+    <a class="brand" href="index.html">{{NAME}}</a>
+    <nav aria-label="Site">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="support.html" aria-current="page">Support</a></li>
+        <li><a href="privacy.html">Privacy</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main id="main">
+    <h1>Support</h1>
+    <p>Need help with {{NAME}}? Start with the questions below. If your answer isn't here, email <a href="mailto:{{SUPPORT_EMAIL}}">{{SUPPORT_EMAIL}}</a> and include your phone model and the feed address if a particular feed is involved.</p>
+
+    <h2>Frequently asked questions</h2>
+
+    <details>
+      <summary>How do I move my subscriptions from The Old Reader?</summary>
+      <p>On The Old Reader's website, go to <strong>Settings &rarr; Import/Export</strong> and choose <strong>Export as OPML</strong>. Save the file somewhere your phone can reach it, such as Files, iCloud Drive, Google Drive or your downloads, then import it into {{NAME}} as described below.</p>
+      <p>Most other readers, including Feedly and Inoreader, also offer an OPML export in their settings.</p>
+    </details>
+
+    <details>
+      <summary>How do I import an OPML file?</summary>
+      <p>In {{NAME}}, choose the option to import OPML and pick the file. Your feeds are added along with their folders, and the app then downloads the latest articles.</p>
+    </details>
+
+    <details>
+      <summary>How do I add a single feed?</summary>
+      <p>Tap Add and paste the feed's address. If you don't know it, paste the website's homepage instead and {{NAME}} will look for the feed. RSS 2.0, RSS 1.0 (RDF) and Atom feeds are supported.</p>
+    </details>
+
+    <details>
+      <summary>Why doesn't background refresh happen on a regular schedule?</summary>
+      <p>{{NAME}} refreshes every time you open it. Background refresh is different: iOS and Android decide when apps may run in the background, based on battery level, how often you use the app, network conditions and other factors. The interval you choose in settings is a minimum, not a guarantee, so refreshes may come later or less often than you set. If you turned on Wi-Fi only, background refresh waits for Wi-Fi. Low Power Mode or battery saver can also delay or pause it.</p>
+    </details>
+
+    <details>
+      <summary>Why don't images show when I'm offline?</summary>
+      <p>Article text is saved on your device, but images are loaded from the web each time you view them. Without a connection, articles still open but images won't appear. You can also turn images off in Appearance settings.</p>
+    </details>
+
+    <details>
+      <summary>Where is my data, and how do I back it up?</summary>
+      <p>Everything stays on your phone: your feeds, folders, articles, read and starred status, and settings. Nothing is stored on our side, so there is no account to restore from, and there is no sync between devices.</p>
+      <p>Your phone's own backup can include this data: iCloud Backup on iPhone, or Android's backup to your Google account. You control those backups in your phone's settings; we have no access to them.</p>
+      <p>To keep a separate copy of your subscriptions, use <strong>Export OPML</strong> and save the file with the share sheet (to Files, cloud storage or email). That file contains your feeds and folders only; articles, starred items and read status are not included.</p>
+    </details>
+
+    <details>
+      <summary>Moving to a new phone</summary>
+      <p>If you set up the new phone by restoring a backup of the old one (iCloud Backup on iPhone, or your Google account backup on Android), the app's data usually comes along.</p>
+      <p>Otherwise, on the old phone use <strong>Export OPML</strong> and send the file to yourself, then import it on the new phone. This moves your subscriptions and folders only; saved articles, starred items and read status aren't included. The app then downloads the latest articles from each feed.</p>
+    </details>
+
+    <details>
+      <summary>How do I delete my data?</summary>
+      <p>Deleting the app removes everything it stored. Inside the app you can also use <strong>Delete read articles</strong>, or lower how many articles are kept per feed and for how many days. Starred articles are kept until you unstar them.</p>
+    </details>
+
+    <details>
+      <summary>A feed won't load. What can I do?</summary>
+      <p>Check that the address opens in your phone's browser. Some sites move or remove their feeds, and some block apps from fetching them. If a feed works in other readers but not in {{NAME}}, email us the address.</p>
+    </details>
+
+    <h2>Contact</h2>
+    <p>Email <a href="mailto:{{SUPPORT_EMAIL}}">{{SUPPORT_EMAIL}}</a>. {{NAME}} is made by {{DEVELOPER_NAME}}, so replies may take a few days.</p>
+  </main>
+  <footer>
+    <p>{{NAME}} by {{DEVELOPER_NAME}} &middot; <a href="privacy.html">Privacy</a></p>
+  </footer>
+</body>
+</html>
