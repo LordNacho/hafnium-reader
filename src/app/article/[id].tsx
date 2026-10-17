@@ -1,5 +1,4 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, PixelRatio, Pressable, Share, StyleSheet, Text, View } from 'react-native';
 import { WebView, type WebViewNavigation } from 'react-native-webview';
@@ -76,10 +75,12 @@ export default function ArticleScreen() {
     notifyDataChanged();
   };
 
-  // Any navigation away from the rendered article opens in the system browser instead.
+  const openPage = (url: string) => router.push({ pathname: '/page', params: { url } });
+
+  // Links tapped inside the article open in the page viewer (JavaScript off by default).
   const onNavigate = (req: WebViewNavigation) => {
     if (/^https?:/i.test(req.url)) {
-      WebBrowser.openBrowserAsync(req.url);
+      openPage(req.url);
       return false;
     }
     return true;
@@ -141,7 +142,7 @@ export default function ArticleScreen() {
             notifyDataChanged();
           }}
         />
-        <ToolbarButton label="Open site" disabled={!article.url} onPress={() => article.url && WebBrowser.openBrowserAsync(article.url)} />
+        <ToolbarButton label="Open site" disabled={!article.url} onPress={() => article.url && openPage(article.url)} />
         <ToolbarButton label="Next ›" disabled={index < 0 || index >= siblings.length - 1} onPress={() => go(1)} />
       </View>
     </View>

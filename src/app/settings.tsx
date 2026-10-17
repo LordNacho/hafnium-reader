@@ -19,6 +19,8 @@ const SPACINGS: Settings['lineSpacing'][] = ['compact', 'normal', 'relaxed'];
 const capitalize = (s: string) => s[0].toUpperCase() + s.slice(1);
 const FULLTEXT_OPTIONS: Settings['fullText'][] = ['off', 'wifi', 'always'];
 const FULLTEXT_LABELS: Record<Settings['fullText'], string> = { off: 'Off', wifi: 'On Wi-Fi', always: 'Always' };
+const STORAGE_LIMITS = [50, 100, 250, 500, 1000, 0];
+const formatMB = (mb: number) => (mb === 0 ? 'No limit' : mb >= 1000 ? `${mb / 1000} GB` : `${mb} MB`);
 const ARTICLE_LIMITS = [25, 50, 100, 200, 500];
 const AGE_LIMITS = [7, 14, 30, 90, 365];
 const INTERVALS = [15, 30, 60, 180, 360, 720];
@@ -43,7 +45,7 @@ export default function SettingsScreen() {
     await saveSetting(key, value);
     if (key === 'backgroundRefresh' || key === 'refreshIntervalMinutes') await configureBackgroundRefresh();
     if (key === 'fullText' && value !== 'off') downloadFullTextBatch().catch(() => {});
-    if (key === 'maxArticlesPerFeed' || key === 'maxAgeDays') {
+    if (key === 'maxArticlesPerFeed' || key === 'maxAgeDays' || key === 'maxStorageMB') {
       await prune();
       notifyDataChanged();
     }
@@ -112,6 +114,8 @@ export default function SettingsScreen() {
 
       {section('Offline storage')}
       <View style={[styles.card, { backgroundColor: colors.surface }]}>
+        <Choice label="Storage limit" options={STORAGE_LIMITS} value={settings.maxStorageMB} onChange={(v) => update('maxStorageMB', v)} format={formatMB} />
+        <Text style={[styles.note, { color: colors.muted }]}>When articles take more space than this, the oldest are removed, read ones first.</Text>
         <Choice label="Keep per feed" unit="articles" options={ARTICLE_LIMITS} value={settings.maxArticlesPerFeed} onChange={(v) => update('maxArticlesPerFeed', v)} />
         <Choice label="Keep articles for" unit="days" options={AGE_LIMITS} value={settings.maxAgeDays} onChange={(v) => update('maxAgeDays', v)} />
         <Text style={[styles.note, { color: colors.muted }]}>Starred articles are always kept.</Text>
@@ -123,11 +127,12 @@ export default function SettingsScreen() {
           format={(v) => FULLTEXT_LABELS[v]}
         />
         <Text style={[styles.note, { color: colors.muted }]}>
-          When a feed only gives a summary, the app downloads the linked article and keeps the readable text, up to 30 of the newest unread articles per refresh. Text a site loads only when you tap, and paywalled articles, stay as summaries.
+          When a feed only gives a summary, the app downloads the linked article and keeps the readable text, newest unread first, until the storage limit is nearly reached. Text a site loads only when you tap, and paywalled articles, stay as summaries.
         </Text>
         {stats && (
           <Text style={[styles.note, { color: colors.muted }]}>
-            {stats.feeds} feeds · {stats.articles} articles ({stats.unread} unread, {stats.starred} starred) · {(stats.bytes / 1048576).toFixed(1)} MB
+            {stats.feeds} feeds · {stats.articles} articles ({stats.unread} unread, {stats.starred} starred) · {(stats.bytes / 1_000_000).toFixed(1)} MB
+            {settings.maxStorageMB > 0 ? ` of ${formatMB(settings.maxStorageMB)}` : ''}
           </Text>
         )}
         <ActionRow

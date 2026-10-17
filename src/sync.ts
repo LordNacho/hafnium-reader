@@ -182,7 +182,41 @@ async function storeItems(feedId: number, parsed: ParsedFeed, settings: Settings
   return added;
 }
 
-/** Enforce the offline limits: per-feed article count and maximum age. Starred articles are kept. */
+/** Approximate stored size of an article: feed text, preview and downloaded full text. */
+const ARTICLE_SIZE_SQL = "LENGTH(content) + LENGTH(preview) + LENGTH(COALESCE(full_content, ''))";
+
+export async function storedBytes(): Promise<number> {
+  const db = await getDb();
+  const row = await db.getFirstAsync<{ bytes: number }>(`SELECT COALESCE(SUM(${ARTICLE_SIZE_SQL}), 0) AS bytes FROM articles`);
+  return row?.bytes ?? 0;
+}
+
+/** Over the storage limit, drop the oldest articles: read ones first, then unread. Starred articles stay. */
+async function enforceStorageLimit(limitBytes: number) {
+  const db = await getDb();
+  const starred = await db.getFirstAsync<{ bytes: number }>(
+    `SELECT COALESCE(SUM(${ARTICLE_SIZE_SQL}), 0) AS bytes FROM articles WHERE is_starred = 1`,
+  );
+  // Keep unread before read, newest first, until the running total reaches what's left after starred articles.
+  const { changes } = await db.runAsync(
+    `DELETE FROM articles WHERE id IN (
+       SELECT id FROM (
+         SELECT id, SUM(${ARTICLE_SIZE_SQL}) OVER (ORDER BY is_read ASC, sort_at DESC ROWS UNBOUNDED PRECEDING) AS running
+         FROM articles WHERE is_starred = 0
+       ) WHERE running > ?
+     )`,
+    Math.max(0, limitBytes - (starred?.bytes ?? 0)),
+  );
+  if (changes > 100) {
+    try {
+      await db.execAsync('VACUUM'); // give the space back to the phone
+    } catch {
+      // another query is running; the space is reused by new articles anyway
+    }
+  }
+}
+
+/** Enforce the offline limits: per-feed article count, maximum age and total storage. Starred articles are kept. */
 export async function prune(settings?: Settings) {
   const s = settings ?? (await loadSettings());
   const db = await getDb();
@@ -196,9 +230,11 @@ export async function prune(settings?: Settings) {
      )`,
     s.maxArticlesPerFeed,
   );
+  if (s.maxStorageMB > 0) await enforceStorageLimit(s.maxStorageMB * 1_000_000);
 }
 
-const FULLTEXT_PER_REFRESH = 30;
+/** Safety cap per run; the storage limit normally stops downloads first. */
+const FULLTEXT_PER_REFRESH = 100;
 const FULLTEXT_CONCURRENCY = 3;
 const MAX_PAGE_CHARS = 3_000_000;
 const PAGE_HEADERS = {
@@ -281,14 +317,21 @@ async function doFullTextBatch(): Promise<number> {
     }
   }
 
+  // Stop before the storage limit so we don't download pages only to prune them again.
+  const limit = settings.maxStorageMB > 0 ? settings.maxStorageMB * 1_000_000 * 0.95 : Infinity;
+  let used = await storedBytes();
   let saved = 0;
   let next = 0;
   const worker = async () => {
-    while (next < queue.length) {
-      if ((await downloadFullText(queue[next++])) === 'ok') saved++;
+    while (next < queue.length && used < limit) {
+      if ((await downloadFullText(queue[next++])) === 'ok') {
+        saved++;
+        used = await storedBytes();
+      }
     }
   };
   await Promise.all(Array.from({ length: Math.min(FULLTEXT_CONCURRENCY, queue.length) }, worker));
+  await prune(settings);
   return saved;
 }
 

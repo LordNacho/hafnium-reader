@@ -18,7 +18,7 @@ Adding a single feed is easy: paste a feed address, or just the site's homepage,
 
 Reading
 • A clean article view with previous and next, star, mark read or unread, and share
-• Open the original page in the in-app browser
+• Open the original page with JavaScript off, so timed pop-ups and most ads don't appear
 • System, light, dark or sepia theme
 • Text size from 85% to 150% on top of your phone's setting, sans or serif font, compact, normal or relaxed line spacing, images on or off
 • Unread or all articles, mark all as read, folders, All articles and Starred
@@ -31,6 +31,7 @@ Staying up to date
 Keeping storage in check
 • Keep the newest 25 to 500 articles per feed, and articles from the last 7 to 365 days
 • Starred articles are never removed
+• Set a storage limit from 50 MB to 1 GB; the oldest articles make way for new ones
 • Delete read articles in one tap
 • Download full articles when a feed only gives a summary, on Wi-Fi or always
 

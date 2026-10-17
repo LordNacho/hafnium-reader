@@ -2,6 +2,7 @@
 import { buildOpml, parseOpml } from '../src/lib/opml';
 import { SAMPLE_FEEDS } from '../src/sampleFeeds';
 import { extractArticle, isWorthKeeping, looksLikeSummary } from '../src/lib/fulltext';
+import { hostOf, isAdNavigation, PAGE_FILTER_SCRIPT } from '../src/lib/pageFilter';
 import { parseDate, parseFeed } from '../src/lib/feed';
 import { absolutizeUrls, discoverFeedLinks, htmlToText, httpsVariant, stripMedia, upgradeInsecureMedia } from '../src/lib/html';
 
@@ -166,6 +167,25 @@ describe('full-text extraction', () => {
     expect(isWorthKeeping(extracted, '<p>Short teaser.</p>')).toBe(true);
     expect(isWorthKeeping(extracted, `<p>${'x'.repeat(3500)}</p>`)).toBe(false);
     expect(isWorthKeeping({ content: '', textLength: 300 }, '<p>Hi</p>')).toBe(false);
+  });
+});
+
+describe('page filter', () => {
+  it('reads host names without relying on URL()', () => {
+    expect(hostOf('https://www.bbc.co.uk/news/world-123?x=1')).toBe('bbc.co.uk');
+    expect(hostOf('http://user@Example.COM:8080/a')).toBe('example.com');
+    expect(hostOf('not a url')).toBe('');
+  });
+  it('blocks navigations to ad networks only', () => {
+    expect(isAdNavigation('https://ad.doubleclick.net/clk;123')).toBe(true);
+    expect(isAdNavigation('https://www.taboola.com/redirect?u=x')).toBe(true);
+    expect(isAdNavigation('https://www.theguardian.com/world/2026/oct/17/story')).toBe(false);
+    expect(isAdNavigation('https://notdoubleclick.net.example.org/')).toBe(false);
+  });
+  it('builds a filter script that hides ads and blocks pop-up windows', () => {
+    expect(PAGE_FILTER_SCRIPT).toContain('ins.adsbygoogle');
+    expect(PAGE_FILTER_SCRIPT).toContain('window.open = function');
+    expect(() => new Function(PAGE_FILTER_SCRIPT)).not.toThrow();
   });
 });
 
