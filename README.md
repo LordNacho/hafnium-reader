@@ -99,6 +99,16 @@ EAS will offer to generate and manage the signing credentials for both platforms
 - New *personal* developer accounts must run a closed test with at least 12 testers for 14 days before production access is granted.
 - Fill in the Data safety form ("No data collected") and the content rating questionnaire, and add a privacy policy URL.
 
+### Store text and website
+
+Listing text, the privacy policy and the support pages are templates in `store/templates/`, filled in from `store/config.json`. `npm run store` renders them into `store/out/` (paste into App Store Connect and Play Console) and `docs/` (the website), and checks every store character limit.
+
+The website is served by GitHub Pages from the `docs/` folder:
+
+1. Repository → Settings → Pages → Source: *Deploy from a branch*, branch `main` (or `master`), folder `/docs`. A private repository needs GitHub Pro (personal) or Team (organization) for Pages; the site itself is public.
+2. DNS for `hafnium.ltd`: add a `CNAME` record `reader` → `<github-account>.github.io`. `docs/CNAME` already names `reader.hafnium.ltd`.
+3. Back in Settings → Pages, wait for the domain check, then tick *Enforce HTTPS*.
+
 ### 5. Shipping updates
 
 - JS-only changes: `npx eas-cli@latest update` (over-the-air, after adding `expo-updates`), or

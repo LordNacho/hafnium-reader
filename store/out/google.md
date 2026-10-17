@@ -54,11 +54,11 @@ info@hafnium.ltd
 
 ## Website
 
-{{SITE_URL}}
+https://reader.hafnium.ltd
 
 ## Privacy Policy URL
 
-{{SITE_URL}}/privacy.html
+https://reader.hafnium.ltd/privacy.html
 
 ## Data safety answers
 

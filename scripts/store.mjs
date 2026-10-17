@@ -153,6 +153,15 @@ async function main() {
     }
   }
 
+  // GitHub Pages serves a custom domain only when docs/CNAME names it.
+  if (values.SITE_URL) {
+    const host = new URL(values.SITE_URL).hostname;
+    if (!host.endsWith('.github.io')) {
+      await writeFile(path.join(docsDir, 'CNAME'), `${host}\n`);
+      written.push('docs/CNAME');
+    }
+  }
+
   // Report
   console.log(`Wrote store/out/apple.md, store/out/google.md, ${written.join(', ')}\n`);
   const header = ['Store', 'Field', 'Length', 'Limit', 'Status'];

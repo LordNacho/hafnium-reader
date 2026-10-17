@@ -54,11 +54,11 @@ The first release of Hafnium Reader. Add feeds by address or homepage, import yo
 
 ## Support URL
 
-{{SITE_URL}}/support.html
+https://reader.hafnium.ltd/support.html
 
 ## Privacy Policy URL
 
-{{SITE_URL}}/privacy.html
+https://reader.hafnium.ltd/privacy.html
 
 ## Category
 
