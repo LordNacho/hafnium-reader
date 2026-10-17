@@ -46,7 +46,7 @@ export default function RootLayout() {
         <Stack.Screen name="articles" options={{ title: 'Articles' }} />
         <Stack.Screen name="article/[id]" options={{ title: '' }} />
         <Stack.Screen name="page" options={{ title: '' }} />
-        <Stack.Screen name="add" options={{ title: 'Add feed', presentation: 'modal' }} />
+        <Stack.Screen name="add" options={{ title: 'Add feeds', presentation: 'modal' }} />
         <Stack.Screen name="settings" options={{ title: 'Settings' }} />
       </Stack>
     </>

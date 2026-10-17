@@ -4,7 +4,8 @@ import { SAMPLE_FEEDS } from '../src/sampleFeeds';
 import { extractArticle, isWorthKeeping, looksLikeSummary } from '../src/lib/fulltext';
 import { hostOf, isAdNavigation, PAGE_FILTER_SCRIPT } from '../src/lib/pageFilter';
 import { parseDate, parseFeed } from '../src/lib/feed';
-import { absolutizeUrls, discoverFeedLinks, htmlToText, httpsVariant, stripMedia, upgradeInsecureMedia } from '../src/lib/html';
+import { absolutizeUrls, discoverFeedLinks, discoverFeeds, htmlToText, httpsVariant, originOf, stripMedia, upgradeInsecureMedia } from '../src/lib/html';
+import { DIRECTORY, searchDirectory } from '../src/directory';
 
 const OLD_READER_OPML = `<?xml version="1.0" encoding="UTF-8"?>
 <opml version="1.0">
@@ -189,6 +190,22 @@ describe('page filter', () => {
   });
 });
 
+describe('feed directory', () => {
+  it('finds feeds by name, nickname and Danish spelling', () => {
+    expect(searchDirectory('guardian').map((f) => f.title)).toContain('The Guardian – World');
+    expect(searchDirectory('guardian science')[0].title).toBe('The Guardian – Science');
+    expect(searchDirectory('dr nyheder').length).toBeGreaterThan(0);
+    expect(searchDirectory('ingenioren')[0].title).toBe('Ingeniøren');
+    expect(searchDirectory('nyt').some((f) => f.title.startsWith('The New York Times'))).toBe(true);
+    expect(searchDirectory('   ')).toEqual([]);
+  });
+  it('has unique https addresses', () => {
+    const urls = DIRECTORY.map((f) => f.url);
+    expect(new Set(urls).size).toBe(urls.length);
+    expect(urls.every((u) => u.startsWith('https://'))).toBe(true);
+  });
+});
+
 describe('sample feeds', () => {
   it('are unique https feeds in named folders', () => {
     const urls = SAMPLE_FEEDS.map((f) => f.url);
@@ -205,6 +222,15 @@ describe('html helpers', () => {
     const html = `<head><link rel="stylesheet" href="s.css"><link rel="alternate" type="application/rss+xml" title="RSS" href="/feed.xml">
       <link type='application/atom+xml' rel='alternate' href='https://a.com/atom'></head>`;
     expect(discoverFeedLinks(html, 'https://a.com/blog/')).toEqual(['https://a.com/feed.xml', 'https://a.com/atom']);
+  });
+  it('discovers feed titles and origins', () => {
+    const html = `<link rel="alternate" type="application/rss+xml" title="World &amp; Europe" href="/world/rss"><link rel="alternate" type="application/atom+xml" href="/atom">`;
+    expect(discoverFeeds(html, 'https://news.example/')).toEqual([
+      { url: 'https://news.example/world/rss', title: 'World & Europe' },
+      { url: 'https://news.example/atom', title: null },
+    ]);
+    expect(originOf('https://www.example.com:8443/a/b?c')).toBe('https://www.example.com:8443');
+    expect(originOf('nope')).toBeNull();
   });
   it('absolutizes relative URLs only', () => {
     expect(absolutizeUrls(`<img src="/a.png"><a href='b'>x</a><a href="#top"></a><img src="data:x"><a href="mailto:z">`, 'https://s.com/p/q'))

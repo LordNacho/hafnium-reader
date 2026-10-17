@@ -83,9 +83,9 @@ export function absolutizeUrls(html: string, base: string | null): string {
   });
 }
 
-/** Find RSS/Atom feeds advertised by an HTML page via <link rel="alternate">. */
-export function discoverFeedLinks(html: string, pageUrl: string): string[] {
-  const found: string[] = [];
+/** RSS/Atom feeds advertised by an HTML page via <link rel="alternate">, with their titles when given. */
+export function discoverFeeds(html: string, pageUrl: string): { url: string; title: string | null }[] {
+  const found: { url: string; title: string | null }[] = [];
   for (const tag of html.match(/<link\b[^>]*>/gi) ?? []) {
     const attr = (name: string) =>
       tag.match(new RegExp(`\\b${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, 'i'))?.slice(1).find((v) => v !== undefined);
@@ -94,8 +94,18 @@ export function discoverFeedLinks(html: string, pageUrl: string): string[] {
     const href = attr('href');
     if (href && rel.split(/\s+/).includes('alternate') && /(rss|atom|rdf)\+xml/.test(type)) {
       const url = resolveUrl(decodeEntities(href), pageUrl);
-      if (!found.includes(url)) found.push(url);
+      const title = attr('title');
+      if (!found.some((f) => f.url === url)) found.push({ url, title: title ? decodeEntities(title).trim() || null : null });
     }
   }
   return found;
+}
+
+export function discoverFeedLinks(html: string, pageUrl: string): string[] {
+  return discoverFeeds(html, pageUrl).map((f) => f.url);
+}
+
+/** scheme://host[:port] of an absolute URL, without relying on URL(). */
+export function originOf(url: string): string | null {
+  return url.match(/^[a-z][a-z0-9+.-]*:\/\/[^/?#]+/i)?.[0] ?? null;
 }

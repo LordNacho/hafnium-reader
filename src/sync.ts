@@ -3,7 +3,7 @@ import { getDb } from './db';
 import { notifyDataChanged } from './events';
 import { looksLikeFeed, parseFeed, type ParsedFeed } from './lib/feed';
 import { extractArticle, isWorthKeeping, looksLikeSummary } from './lib/fulltext';
-import { absolutizeUrls, discoverFeedLinks, htmlToText, httpsVariant } from './lib/html';
+import { absolutizeUrls, discoverFeedLinks, discoverFeeds, htmlToText, httpsVariant, originOf } from './lib/html';
 import type { OpmlFeed } from './lib/opml';
 import { loadSettings, type Settings } from './settings';
 
@@ -338,6 +338,43 @@ async function doFullTextBatch(): Promise<number> {
 function normalizeUrl(input: string): string {
   const trimmed = input.trim();
   return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+}
+
+export interface FeedCandidate {
+  url: string;
+  title: string;
+}
+
+/** Addresses many sites serve feeds from without advertising them on their homepage. */
+const COMMON_FEED_PATHS = ['/feed', '/rss', '/rss.xml', '/feed.xml', '/atom.xml', '/index.xml', '/feeds/posts/default'];
+
+/**
+ * The feeds a site offers: the address itself if it is a feed, the feeds its page advertises,
+ * or else the first common feed address that works.
+ */
+export async function findFeeds(input: string): Promise<FeedCandidate[]> {
+  const { res, url } = await fetchPreferHttps(normalizeUrl(input));
+  if (!res.ok) throw new Error(`The site answered with an error (HTTP ${res.status}).`);
+  const body = await res.text();
+  const pageUrl = res.url || url;
+  if (looksLikeFeed(body)) return [{ url, title: parseFeed(body, url).title }];
+
+  const advertised = discoverFeeds(body, pageUrl);
+  if (advertised.length) return advertised.map((f) => ({ url: f.url, title: f.title ?? f.url }));
+
+  const origin = originOf(pageUrl);
+  if (!origin) return [];
+  for (const path of COMMON_FEED_PATHS) {
+    try {
+      const r = await fetchWithTimeout(origin + path);
+      if (!r.ok) continue;
+      const text = await r.text();
+      if (looksLikeFeed(text)) return [{ url: origin + path, title: parseFeed(text, origin + path).title }];
+    } catch {
+      // try the next address
+    }
+  }
+  return [];
 }
 
 /** Subscribe to a feed URL, or a web page that advertises one. Returns the new feed id. */
