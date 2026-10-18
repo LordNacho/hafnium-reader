@@ -49,7 +49,7 @@ Play Console → **Create app**
 | Full description | `store/out/google.md` → Full Description |
 | App icon (512×512) | `store/assets/play-icon-512.png` |
 | Feature graphic (1024×500) | `store/assets/play-feature-graphic-1024x500.png` |
-| Phone screenshots (2–8) | Long side at most 2× the short side, so raw 20:9 phone screenshots are too tall. Use framed 1080×1920 images. |
+| Phone screenshots (2–8) | `store/assets/screenshots/1-feeds.png` … `4-settings.png` (1080×1920, in this order). Raw 20:9 phone screenshots are too tall for Play (long side at most 2× the short side). |
 | Category | News & Magazines |
 | Contact email | info@hafnium.ltd |
 | Website | https://reader.hafnium.ltd |
