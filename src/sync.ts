@@ -1,5 +1,5 @@
 import * as Network from 'expo-network';
-import { getDb } from './db';
+import { getDb, withWriteTransaction } from './db';
 import { notifyDataChanged } from './events';
 import { looksLikeFeed, parseFeed, type ParsedFeed } from './lib/feed';
 import { extractArticle, isWorthKeeping, looksLikeSummary } from './lib/fulltext';
@@ -136,7 +136,6 @@ async function syncFeed(
 }
 
 async function storeItems(feedId: number, parsed: ParsedFeed, settings: Settings): Promise<number> {
-  const db = await getDb();
   const now = Date.now();
   const cutoff = now - settings.maxAgeDays * DAY_MS;
   const items = parsed.items
@@ -144,7 +143,7 @@ async function storeItems(feedId: number, parsed: ParsedFeed, settings: Settings
     .slice(0, settings.maxArticlesPerFeed);
 
   let added = 0;
-  await db.withExclusiveTransactionAsync(async (txn) => {
+  await withWriteTransaction(async (txn) => {
     for (const item of items) {
       const content = absolutizeUrls(item.content, item.url ?? parsed.siteUrl);
       // Undated items sort by first-seen time; clamp future dates so they don't pin to the top.
@@ -482,9 +481,8 @@ export async function addFeed(input: string, folder: string | null = null): Prom
 
 /** Insert feeds from an OPML import without fetching them; returns how many were new. */
 export async function importFeeds(feeds: OpmlFeed[]): Promise<number> {
-  const db = await getDb();
   let added = 0;
-  await db.withExclusiveTransactionAsync(async (txn) => {
+  await withWriteTransaction(async (txn) => {
     for (const f of feeds) {
       const r = await txn.runAsync(
         'INSERT OR IGNORE INTO feeds (url, title, site_url, folder, created_at) VALUES (?, ?, ?, ?, ?)',

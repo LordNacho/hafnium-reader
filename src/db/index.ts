@@ -22,8 +22,38 @@ export function getDb(): Promise<SQLite.SQLiteDatabase> {
   return dbPromise;
 }
 
+/**
+ * Run a write transaction on the shared connection, one at a time. expo-sqlite's exclusive transactions use a
+ * second connection, and while one is writing every other write fails with "database is locked" (SQLITE_BUSY),
+ * so the app queues its transactions here instead. Single-statement writes issued meanwhile on the shared
+ * connection simply join the open transaction.
+ */
+let writeQueue: Promise<unknown> = Promise.resolve();
+
+export function withWriteTransaction<T>(task: (db: SQLite.SQLiteDatabase) => Promise<T>): Promise<T> {
+  const run = writeQueue.then(async () => {
+    const db = await getDb();
+    await db.execAsync('BEGIN IMMEDIATE');
+    try {
+      const result = await task(db);
+      await db.execAsync('COMMIT');
+      return result;
+    } catch (e) {
+      try {
+        await db.execAsync('ROLLBACK');
+      } catch {
+        // already rolled back
+      }
+      throw e;
+    }
+  });
+  writeQueue = run.catch(() => {});
+  return run;
+}
+
 async function migrate(db: SQLite.SQLiteDatabase) {
-  await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
+  // Wait up to 5 s for another connection (e.g. a background refresh) to finish writing instead of failing.
+  await db.execAsync('PRAGMA busy_timeout = 5000; PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
   const row = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
   const version = row?.user_version ?? 0;
   if (version >= SCHEMA_VERSION) return;
@@ -202,5 +232,9 @@ export async function storageStats(): Promise<{ feeds: number; articles: number;
 export async function deleteReadArticles() {
   const db = await getDb();
   await db.runAsync('DELETE FROM articles WHERE is_read = 1 AND is_starred = 0');
-  await db.execAsync('VACUUM');
+  try {
+    await db.execAsync('VACUUM'); // give the space back to the phone
+  } catch {
+    // a refresh is writing right now; the freed space is reused by new articles instead
+  }
 }
