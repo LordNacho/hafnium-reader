@@ -22,6 +22,12 @@
     },
     "production": {
       "autoIncrement": true
+    },
+    "simulator": {
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      }
     }
   },
   "submit": {
