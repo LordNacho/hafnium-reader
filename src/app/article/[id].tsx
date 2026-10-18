@@ -28,14 +28,19 @@ export default function ArticleScreen() {
 
   useEffect(() => {
     let cancelled = false;
-    getArticle(Number(id)).then(async (a) => {
-      if (cancelled || !a) return;
-      setArticle(a);
-      if (!a.is_read) {
-        await setRead(a.id, true);
-        notifyDataChanged();
-      }
-    });
+    getArticle(Number(id))
+      .then(async (a) => {
+        if (cancelled || !a) return;
+        setArticle(a);
+        if (!a.is_read) {
+          await setRead(a.id, true);
+          notifyDataChanged();
+        }
+      })
+      .catch((e) => {
+        // Marking as read can wait for the next time the article is opened; don't interrupt reading.
+        console.warn('Could not mark the article as read:', e);
+      });
     return () => {
       cancelled = true;
     };

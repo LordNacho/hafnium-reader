@@ -188,14 +188,26 @@ export async function getArticle(id: number): Promise<Article | null> {
   );
 }
 
+/** Retry a small write if another connection (e.g. a background refresh) is holding the database. */
+async function retryIfBusy<T>(write: () => Promise<T>, attempts = 4): Promise<T> {
+  for (let i = 1; ; i++) {
+    try {
+      return await write();
+    } catch (e) {
+      if (i >= attempts || !/database is locked|SQLITE_BUSY/i.test(String(e))) throw e;
+      await new Promise((resolve) => setTimeout(resolve, 400 * i));
+    }
+  }
+}
+
 export async function setRead(id: number, read: boolean) {
   const db = await getDb();
-  await db.runAsync('UPDATE articles SET is_read = ? WHERE id = ?', read ? 1 : 0, id);
+  await retryIfBusy(() => db.runAsync('UPDATE articles SET is_read = ? WHERE id = ?', read ? 1 : 0, id));
 }
 
 export async function setStarred(id: number, starred: boolean) {
   const db = await getDb();
-  await db.runAsync('UPDATE articles SET is_starred = ? WHERE id = ?', starred ? 1 : 0, id);
+  await retryIfBusy(() => db.runAsync('UPDATE articles SET is_starred = ? WHERE id = ?', starred ? 1 : 0, id));
 }
 
 export async function markAllRead(filter: ArticleFilter) {
