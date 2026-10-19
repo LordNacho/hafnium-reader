@@ -43,3 +43,4 @@ public/*.apk
 public/playkit/
 public/*.zip
 public/*.tar.gz
+public/appstore/

@@ -56,7 +56,7 @@ Free; all countries (or as you prefer).
 
 | Field | Where |
 |---|---|
-| iPhone screenshots (6.9", 1320×2868 or 1290×2796) | Take on an iPhone running the TestFlight build. Android screenshots show Android UI and risk rejection. |
+| iPhone screenshots (6.9", 1320×2868) | `store/assets/app-store-screenshots/1-feeds.png` … `5-feeds-dark.png`, in this order (made from iOS Simulator screenshots). |
 | Promotional text, Description, Keywords | `store/out/apple.md` |
 | Support URL | https://reader.hafnium.ltd/support.html |
 | Marketing URL | https://reader.hafnium.ltd |
