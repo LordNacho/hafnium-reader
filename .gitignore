@@ -40,3 +40,5 @@ yarn-error.*
 /ios
 /android
 public/*.apk
+public/playkit/
+public/*.zip
