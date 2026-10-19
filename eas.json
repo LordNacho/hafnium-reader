@@ -38,6 +38,11 @@
         "ascApiKeyPath": "/home/someuser/.expo/hafnium-asc.p8",
         "ascApiKeyId": "2K4H6DSW5Z",
         "ascApiKeyIssuerId": "d373c5af-0c25-4410-b9ed-c47a9728d5fe"
+      },
+      "android": {
+        "serviceAccountKeyPath": "/home/someuser/.expo/hafnium-play.json",
+        "track": "internal",
+        "releaseStatus": "completed"
       }
     }
   }
