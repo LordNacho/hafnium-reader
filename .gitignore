@@ -42,3 +42,4 @@ yarn-error.*
 public/*.apk
 public/playkit/
 public/*.zip
+public/*.tar.gz
