@@ -1,8 +1,10 @@
+import Constants from 'expo-constants';
 import * as DocumentPicker from 'expo-document-picker';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
+import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { LINE_HEIGHTS, updateAppearance, useAppearance } from '../appearance';
 import { configureBackgroundRefresh } from '../background';
 import { deleteReadArticles, storageStats } from '../db';
@@ -21,6 +23,8 @@ import {
 } from '../sync';
 import { SERIF_FONT, useColors, useFontSize } from '../theme';
 
+const SITE = 'https://reader.hafnium.ltd';
+const CONTACT_EMAIL = 'info@hafnium.ltd';
 const THEMES: ThemeName[] = ['system', 'light', 'dark', 'sepia'];
 const TEXT_SCALES = [0.85, 1, 1.15, 1.3, 1.5];
 const FONTS: Settings['readerFont'][] = ['sans', 'serif'];
@@ -219,6 +223,17 @@ export default function SettingsScreen() {
         <ToggleRow label="Background refresh on Wi-Fi only" value={settings.wifiOnly} onChange={(v) => update('wifiOnly', v)} />
         <Text style={[styles.note, { color: colors.muted }]}>
           The phone decides exactly when background refresh runs; the interval is a minimum. The app also refreshes when opened.
+        </Text>
+      </View>
+
+      {section('Contact us')}
+      <View style={[styles.card, { backgroundColor: colors.surface }]}>
+        <ActionRow label={`Email: ${CONTACT_EMAIL}`} detail="Questions, problems or feedback about the app." onPress={() => Linking.openURL(`mailto:${CONTACT_EMAIL}?subject=Hafnium%20Reader`)} />
+        <ActionRow label="Website: reader.hafnium.ltd" onPress={() => WebBrowser.openBrowserAsync(`${SITE}/contact.html`)} />
+        <ActionRow label="Help and support" onPress={() => WebBrowser.openBrowserAsync(`${SITE}/support.html`)} />
+        <ActionRow label="Privacy policy" onPress={() => WebBrowser.openBrowserAsync(`${SITE}/privacy.html`)} />
+        <Text style={[styles.note, { color: colors.muted }]}>
+          Hafnium Reader {Constants.expoConfig?.version} is made by Hafnium Research. Articles come from the feeds you subscribe to; to contact a publisher about an article, use the contact details on its website.
         </Text>
       </View>
     </ScrollView>
