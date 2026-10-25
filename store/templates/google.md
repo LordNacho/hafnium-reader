@@ -42,6 +42,10 @@ Your privacy
 
 {{NAME}} is free, with no in-app purchases.
 
+## Release Notes
+
+Adds a Contact us section in Settings, with our email address and website.
+
 ## Category
 
 News & Magazines
