@@ -103,13 +103,27 @@ async function accessToken() {
     }
 
     // After a rejection (and for some new apps) Play only accepts changes that are then sent for review from the Console.
-    const consoleOnly = await call('POST', `/edits/${edit.id}:validate`).then(
-      () => false,
-      (e) => {
-        if (/changesNotSentForReview/.test(e.body ?? '')) return true;
-        throw e;
-      },
-    );
+    // A brand-new app may only have a draft release; the first release is then rolled out from the Console.
+    const validate = () =>
+      call('POST', `/edits/${edit.id}:validate`).then(
+        () => false,
+        (e) => {
+          if (/changesNotSentForReview/.test(e.body ?? '')) return true;
+          throw e;
+        },
+      );
+    let consoleOnly;
+    try {
+      consoleOnly = await validate();
+    } catch (e) {
+      if (!/Only releases with status draft/.test(e.body ?? '')) throw e;
+      await call('PUT', `/edits/${edit.id}/tracks/production`, {
+        track: 'production',
+        releases: [{ name: `${app.version} (${versionCode})`, versionCodes: [versionCode], status: 'draft', releaseNotes: [{ language: LANG, text: notes }] }],
+      });
+      console.log('✔ production release saved as a draft (new app: roll it out from Play Console)');
+      consoleOnly = await validate();
+    }
     // Validation itself is refused in that state; committing still checks everything.
     console.log(consoleOnly ? '✔ every step accepted; Play wants this sent for review from the Console' : '✔ Google validated the edit');
     if (dryRun) {
