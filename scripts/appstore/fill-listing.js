@@ -7,6 +7,7 @@ const path = require('path');
 const { api, APP_ID } = require('./client');
 
 const [VERSION = '1.0.0', BUILD = '2'] = process.argv.slice(2);
+const WITH_WHATS_NEW = VERSION !== '1.0.0';
 const md = fs.readFileSync(path.join(__dirname, '../../store/out/apple.md'), 'utf8');
 const section = (title) => {
   const m = md.match(new RegExp(`^## ${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\n([\\s\\S]*?)(?=^## |$(?![\\s\\S]))`, 'm'));
@@ -83,7 +84,15 @@ const step = async (label, fn) => {
     api('PATCH', `/v1/appStoreVersionLocalizations/${vLoc.id}`, {
       data: {
         type: 'appStoreVersionLocalizations', id: vLoc.id,
-        attributes: { description: TEXT.description, keywords: TEXT.keywords, promotionalText: TEXT.promotionalText, supportUrl: URLS.support, marketingUrl: URLS.marketing },
+        attributes: {
+          description: TEXT.description,
+          keywords: TEXT.keywords,
+          promotionalText: TEXT.promotionalText,
+          supportUrl: URLS.support,
+          marketingUrl: URLS.marketing,
+          // Apple only accepts "What's New" on updates, not on an app's first version.
+          ...(WITH_WHATS_NEW ? { whatsNew: section("What's New") } : {}),
+        },
       },
     }));
 
