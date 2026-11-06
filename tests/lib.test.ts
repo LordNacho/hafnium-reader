@@ -4,7 +4,7 @@ import { SAMPLE_FEEDS } from '../src/sampleFeeds';
 import { extractArticle, isWorthKeeping, looksLikeSummary } from '../src/lib/fulltext';
 import { DARK_PAGE_SCRIPT, declaresDarkSupport, hostOf, isAdNavigation, PAGE_FILTER_SCRIPT, preparePageHtml } from '../src/lib/pageFilter';
 import { parseDate, parseFeed } from '../src/lib/feed';
-import { absolutizeUrls, discoverFeedLinks, discoverFeeds, htmlToText, httpsVariant, originOf, stripMedia, upgradeInsecureMedia } from '../src/lib/html';
+import { absolutizeUrls, currentFeedUrl, discoverFeedLinks, discoverFeeds, htmlToText, httpsVariant, originOf, stripMedia, upgradeInsecureMedia } from '../src/lib/html';
 import { DIRECTORY, searchDirectory } from '../src/directory';
 import { guessDomain } from '../src/onlineSearch';
 
@@ -265,6 +265,10 @@ describe('html helpers', () => {
   it('absolutizes relative URLs only', () => {
     expect(absolutizeUrls(`<img src="/a.png"><a href='b'>x</a><a href="#top"></a><img src="data:x"><a href="mailto:z">`, 'https://s.com/p/q'))
       .toBe(`<img src="https://s.com/a.png"><a href='https://s.com/p/b'>x</a><a href="#top"></a><img src="data:x"><a href="mailto:z">`);
+  });
+  it('moves retired FeedBurner addresses', () => {
+    expect(currentFeedUrl('http://feeds2.feedburner.com/IanWelsh')).toBe('https://feeds.feedburner.com/IanWelsh');
+    expect(currentFeedUrl('https://example.com/feed')).toBe('https://example.com/feed');
   });
   it('prefers https', () => {
     expect(httpsVariant('http://a.com/feed')).toBe('https://a.com/feed');

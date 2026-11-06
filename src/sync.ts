@@ -3,7 +3,7 @@ import { getDb, withWriteTransaction } from './db';
 import { notifyDataChanged } from './events';
 import { looksLikeFeed, parseFeed, type ParsedFeed } from './lib/feed';
 import { extractArticle, isWorthKeeping, looksLikeSummary } from './lib/fulltext';
-import { absolutizeUrls, discoverFeedLinks, discoverFeeds, htmlToText, httpsVariant, originOf } from './lib/html';
+import { absolutizeUrls, currentFeedUrl, discoverFeedLinks, discoverFeeds, htmlToText, httpsVariant, originOf } from './lib/html';
 import { looksLikeUrl, type OpmlFeed } from './lib/opml';
 import { loadSettings, type Settings } from './settings';
 
@@ -74,8 +74,8 @@ export function syncAll(onlyFeedId?: number): Promise<SyncResult> {
 async function doSync(onlyFeedId?: number): Promise<SyncResult> {
   const db = await getDb();
   const settings = await loadSettings();
-  const feeds = await db.getAllAsync<{ id: number; url: string; etag: string | null; last_modified: string | null }>(
-    `SELECT id, url, etag, last_modified FROM feeds ${onlyFeedId != null ? 'WHERE id = ?' : ''}`,
+  const feeds = await db.getAllAsync<{ id: number; url: string; title: string; etag: string | null; last_modified: string | null }>(
+    `SELECT id, url, title, etag, last_modified FROM feeds ${onlyFeedId != null ? 'WHERE id = ?' : ''}`,
     ...(onlyFeedId != null ? [onlyFeedId] : []),
   );
 
@@ -103,15 +103,17 @@ function errorMessage(e: unknown): string {
 }
 
 async function syncFeed(
-  feed: { id: number; url: string; etag: string | null; last_modified: string | null },
+  feed: { id: number; url: string; title: string; etag: string | null; last_modified: string | null },
   settings: Settings,
 ): Promise<number> {
   const db = await getDb();
   const headers: Record<string, string> = {};
-  if (feed.etag) headers['If-None-Match'] = feed.etag;
-  if (feed.last_modified) headers['If-Modified-Since'] = feed.last_modified;
+  // A feed still named after its address is downloaded in full (not "unchanged since last time"), so it gets its name.
+  const needsName = looksLikeUrl(feed.title);
+  if (feed.etag && !needsName) headers['If-None-Match'] = feed.etag;
+  if (feed.last_modified && !needsName) headers['If-Modified-Since'] = feed.last_modified;
 
-  const { res, url } = await fetchPreferHttps(feed.url, headers);
+  const { res, url } = await fetchPreferHttps(currentFeedUrl(feed.url), headers);
   if (url !== feed.url) {
     // Remember the secure address; OR IGNORE keeps the old one if that address is already subscribed.
     await db.runAsync('UPDATE OR IGNORE feeds SET url = ? WHERE id = ?', url, feed.id);

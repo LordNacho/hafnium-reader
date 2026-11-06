@@ -56,6 +56,11 @@ export function resolveUrl(href: string, base?: string): string {
 }
 
 /** The https form of a plain-http address, or null if it isn't plain http. */
+/** Retired feed hosts that moved: FeedBurner's old feeds2.feedburner.com now lives at feeds.feedburner.com (https). */
+export function currentFeedUrl(url: string): string {
+  return url.replace(/^https?:\/\/feeds2\.feedburner\.com\//i, 'https://feeds.feedburner.com/');
+}
+
 export function httpsVariant(url: string): string | null {
   return /^http:\/\//i.test(url) ? 'https://' + url.slice(7) : null;
 }
