@@ -44,7 +44,7 @@ Hafnium Reader is free, with no in-app purchases.
 
 ## Release Notes
 
-Feeds imported from an OPML file now show their proper names instead of their web addresses. Adds a Contact us section in Settings.
+Feeds you imported earlier now get their proper names too (they're renamed at the next refresh), and old FeedBurner feed addresses are updated automatically.
 
 ## Category
 

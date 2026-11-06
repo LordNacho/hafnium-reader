@@ -52,7 +52,7 @@ atom,opml,blog,blogs,ad-free,private,rdf,subscribe,articles,headlines,aggregator
 
 ## What's New
 
-Feeds imported from an OPML file now show their proper names instead of their web addresses, including feeds you've already imported (they're renamed at the next refresh). Settings has a new Contact us section.
+Feeds you imported earlier now get their proper names too (they're renamed at the next refresh), and old FeedBurner feed addresses are updated automatically.
 
 ## Support URL
 
