@@ -44,7 +44,7 @@ Your privacy
 
 ## Release Notes
 
-Adds a Contact us section in Settings, with our email address and website.
+Feeds imported from an OPML file now show their proper names instead of their web addresses. Adds a Contact us section in Settings.
 
 ## Category
 

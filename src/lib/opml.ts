@@ -10,6 +10,11 @@ export interface OpmlFeed {
 
 type Outline = Record<string, unknown> & { outline?: Outline[] };
 
+/** A "name" that is really an address; some OPML exports put the feed URL in the title or text. */
+export function looksLikeUrl(s: string | null | undefined): boolean {
+  return !!s && /^(https?:\/\/|www\.)\S+$/i.test(s.trim());
+}
+
 const parser = new XMLParser({
   ignoreAttributes: false,
   attributeNamePrefix: '',
@@ -34,7 +39,9 @@ export function parseOpml(xml: string): OpmlFeed[] {
   const walk = (outlines: Outline[] | undefined, folder: string | null) => {
     for (const o of outlines ?? []) {
       const url = str(o.xmlUrl) ?? str(o.xmlurl);
-      const title = str(o.title) ?? str(o.text);
+      // Prefer whichever of title and text is a real name rather than an address.
+      const names = [str(o.title), str(o.text)].filter((n): n is string => !!n);
+      const title = names.find((n) => !looksLikeUrl(n)) ?? names[0] ?? null;
       if (url) {
         if (!seen.has(url)) {
           seen.add(url);

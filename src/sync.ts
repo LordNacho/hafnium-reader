@@ -4,7 +4,7 @@ import { notifyDataChanged } from './events';
 import { looksLikeFeed, parseFeed, type ParsedFeed } from './lib/feed';
 import { extractArticle, isWorthKeeping, looksLikeSummary } from './lib/fulltext';
 import { absolutizeUrls, discoverFeedLinks, discoverFeeds, htmlToText, httpsVariant, originOf } from './lib/html';
-import type { OpmlFeed } from './lib/opml';
+import { looksLikeUrl, type OpmlFeed } from './lib/opml';
 import { loadSettings, type Settings } from './settings';
 
 const FETCH_TIMEOUT_MS = 20000;
@@ -132,6 +132,11 @@ async function syncFeed(
     parsed.siteUrl,
     feed.id,
   );
+  // A feed imported without a proper name (its address instead) takes the name the feed gives itself.
+  if (parsed.title && !looksLikeUrl(parsed.title)) {
+    const row = await db.getFirstAsync<{ title: string }>('SELECT title FROM feeds WHERE id = ?', feed.id);
+    if (row && looksLikeUrl(row.title)) await db.runAsync('UPDATE feeds SET title = ? WHERE id = ?', parsed.title, feed.id);
+  }
   return added;
 }
 
