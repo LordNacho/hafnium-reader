@@ -101,4 +101,7 @@ The app works the same in every region. Content depends only on the feeds the us
 Regulated industry or third-party material
 Not applicable. The app is a general-purpose feed reader; it does not provide its own content. It shows public feeds and pages the user chooses, with links back to the original publisher, as other RSS readers do. The sample feeds are public RSS feeds the publishers offer for use in feed readers.
 
+Advertising
+The app contains no advertising and no advertising SDK, and the developer earns nothing from ads. The app's code does contain a list of ad-network domain names (for example doubleclick.net and googlesyndication.com): it is part of the built-in page viewer's filter, which blocks and hides publishers' ads, pop-ups and cookie banners on web pages the user opens. Pages and feeds from third-party publishers may include those publishers' own content; the app adds none.
+
 Contact: {{SUPPORT_EMAIL}} ({{DEVELOPER_NAME}})
