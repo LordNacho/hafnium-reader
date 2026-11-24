@@ -42,6 +42,7 @@ const LIMITS = {
     'App Name': 30,
     'Short Description': 80,
     'Full Description': 4000,
+    'Release Notes': 500,
   },
 };
 

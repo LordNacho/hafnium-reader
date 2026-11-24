@@ -42,6 +42,10 @@ Hafnium Reader doesn't collect anything. There is no analytics, no crash reporti
 
 Hafnium Reader is free, with no in-app purchases.
 
+## Release Notes
+
+Feeds you imported earlier now get their proper names too (they're renamed at the next refresh), and old FeedBurner feed addresses are updated automatically.
+
 ## Category
 
 News & Magazines

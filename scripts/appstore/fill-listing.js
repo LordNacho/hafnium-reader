@@ -6,7 +6,9 @@ const fs = require('fs');
 const path = require('path');
 const { api, APP_ID } = require('./client');
 
-const [VERSION = '1.0.0', BUILD = '2'] = process.argv.slice(2);
+// BUILD may be omitted to fill everything except the build (attach it once it has been processed).
+const [VERSION = '1.0.0', BUILD] = process.argv.slice(2);
+const WITH_WHATS_NEW = VERSION !== '1.0.0';
 const md = fs.readFileSync(path.join(__dirname, '../../store/out/apple.md'), 'utf8');
 const section = (title) => {
   const m = md.match(new RegExp(`^## ${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\n([\\s\\S]*?)(?=^## |$(?![\\s\\S]))`, 'm'));
@@ -40,9 +42,14 @@ const step = async (label, fn) => {
 };
 
 (async () => {
+  // The app's primary language; its listing is the one filled in.
+  const LOCALE = (await api('GET', `/v1/apps/${APP_ID}`)).data.attributes.primaryLocale;
   const infos = await api('GET', `/v1/apps/${APP_ID}/appInfos?include=appInfoLocalizations,ageRatingDeclaration`);
-  const info = infos.data.find((i) => i.attributes.state === 'PREPARE_FOR_SUBMISSION') ?? infos.data[0];
-  const infoLoc = (infos.included ?? []).find((i) => i.type === 'appInfoLocalizations' && i.attributes.locale === 'en-US');
+  // A live app has two app infos: the live one (locked) and the one for the next version. Edit the latter.
+  const editable = (i) => !['READY_FOR_SALE', 'READY_FOR_DISTRIBUTION', 'REPLACED_WITH_NEW_INFO'].includes(i.attributes.state ?? i.attributes.appStoreState);
+  const info = infos.data.find(editable) ?? infos.data[0];
+  const infoLocs = await api('GET', `/v1/appInfos/${info.id}/appInfoLocalizations`);
+  const infoLoc = infoLocs.data.find((l) => l.attributes.locale === LOCALE);
   const declId = info.relationships.ageRatingDeclaration.data.id;
 
   await step(`app info: subtitle "${TEXT.subtitle}", privacy policy URL`, () =>
@@ -72,7 +79,7 @@ const step = async (label, fn) => {
   const versions = await api('GET', `/v1/apps/${APP_ID}/appStoreVersions?filter[platform]=IOS&filter[appStoreState]=PREPARE_FOR_SUBMISSION&include=appStoreVersionLocalizations`);
   const version = versions.data[0];
   if (!version) throw new Error('no editable iOS version (PREPARE_FOR_SUBMISSION) found');
-  const vLoc = (versions.included ?? []).find((i) => i.type === 'appStoreVersionLocalizations' && i.attributes.locale === 'en-US');
+  const vLoc = (versions.included ?? []).find((i) => i.type === 'appStoreVersionLocalizations' && i.attributes.locale === LOCALE);
 
   await step(`version ${VERSION}, copyright`, () =>
     api('PATCH', `/v1/appStoreVersions/${version.id}`, {
@@ -83,15 +90,25 @@ const step = async (label, fn) => {
     api('PATCH', `/v1/appStoreVersionLocalizations/${vLoc.id}`, {
       data: {
         type: 'appStoreVersionLocalizations', id: vLoc.id,
-        attributes: { description: TEXT.description, keywords: TEXT.keywords, promotionalText: TEXT.promotionalText, supportUrl: URLS.support, marketingUrl: URLS.marketing },
+        attributes: {
+          description: TEXT.description,
+          keywords: TEXT.keywords,
+          promotionalText: TEXT.promotionalText,
+          supportUrl: URLS.support,
+          marketingUrl: URLS.marketing,
+          // Apple only accepts "What's New" on updates, not on an app's first version.
+          ...(WITH_WHATS_NEW ? { whatsNew: section("What's New") } : {}),
+        },
       },
     }));
 
-  const builds = await api('GET', `/v1/builds?filter[app]=${APP_ID}&filter[version]=${BUILD}&filter[processingState]=VALID`);
-  const build = builds.data[0];
-  if (!build) throw new Error(`build ${BUILD} not found or not processed`);
-  await step(`attach build ${BUILD}`, () =>
-    api('PATCH', `/v1/appStoreVersions/${version.id}/relationships/build`, { data: { type: 'builds', id: build.id } }));
+  if (BUILD) {
+    const builds = await api('GET', `/v1/builds?filter[app]=${APP_ID}&filter[version]=${BUILD}&filter[processingState]=VALID`);
+    const build = builds.data[0];
+    if (!build) throw new Error(`build ${BUILD} not found or not processed`);
+    await step(`attach build ${BUILD}`, () =>
+      api('PATCH', `/v1/appStoreVersions/${version.id}/relationships/build`, { data: { type: 'builds', id: build.id } }));
+  }
 
   const existing = await api('GET', `/v1/appStoreVersions/${version.id}/appStoreReviewDetail`).catch(() => ({ data: null }));
   const reviewAttrs = { notes: TEXT.reviewNotes, contactEmail: 'info@hafnium.ltd', demoAccountRequired: false };

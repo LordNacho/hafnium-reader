@@ -1,10 +1,10 @@
 /// <reference types="jest" />
-import { buildOpml, parseOpml } from '../src/lib/opml';
+import { buildOpml, looksLikeUrl, parseOpml } from '../src/lib/opml';
 import { SAMPLE_FEEDS } from '../src/sampleFeeds';
 import { extractArticle, isWorthKeeping, looksLikeSummary } from '../src/lib/fulltext';
 import { DARK_PAGE_SCRIPT, declaresDarkSupport, hostOf, isAdNavigation, PAGE_FILTER_SCRIPT, preparePageHtml } from '../src/lib/pageFilter';
 import { parseDate, parseFeed } from '../src/lib/feed';
-import { absolutizeUrls, discoverFeedLinks, discoverFeeds, htmlToText, httpsVariant, originOf, stripMedia, upgradeInsecureMedia } from '../src/lib/html';
+import { absolutizeUrls, currentFeedUrl, discoverFeedLinks, discoverFeeds, htmlToText, httpsVariant, originOf, stripMedia, upgradeInsecureMedia } from '../src/lib/html';
 import { DIRECTORY, searchDirectory } from '../src/directory';
 import { guessDomain } from '../src/onlineSearch';
 
@@ -32,6 +32,15 @@ describe('opml', () => {
   it('round-trips through buildOpml', () => {
     const feeds = parseOpml(OLD_READER_OPML);
     expect(parseOpml(buildOpml(feeds))).toEqual(feeds);
+  });
+  it('uses a real name when the export puts the address in title or text', () => {
+    const xml = `<opml version="1.0"><body>
+      <outline title="https://www.theguardian.com/world/rss" text="The Guardian World" type="rss" xmlUrl="https://www.theguardian.com/world/rss"/>
+      <outline title="https://example.com/feed" text="https://example.com/feed" type="rss" xmlUrl="https://example.com/feed"/>
+    </body></opml>`;
+    expect(parseOpml(xml).map((f) => f.title)).toEqual(['The Guardian World', 'https://example.com/feed']);
+    expect(looksLikeUrl('https://example.com/feed')).toBe(true);
+    expect(looksLikeUrl('The Guardian')).toBe(false);
   });
   it('rejects non-OPML', () => {
     expect(() => parseOpml('<html><body/></html>')).toThrow(/OPML/);
@@ -256,6 +265,10 @@ describe('html helpers', () => {
   it('absolutizes relative URLs only', () => {
     expect(absolutizeUrls(`<img src="/a.png"><a href='b'>x</a><a href="#top"></a><img src="data:x"><a href="mailto:z">`, 'https://s.com/p/q'))
       .toBe(`<img src="https://s.com/a.png"><a href='https://s.com/p/b'>x</a><a href="#top"></a><img src="data:x"><a href="mailto:z">`);
+  });
+  it('moves retired FeedBurner addresses', () => {
+    expect(currentFeedUrl('http://feeds2.feedburner.com/IanWelsh')).toBe('https://feeds.feedburner.com/IanWelsh');
+    expect(currentFeedUrl('https://example.com/feed')).toBe('https://example.com/feed');
   });
   it('prefers https', () => {
     expect(httpsVariant('http://a.com/feed')).toBe('https://a.com/feed');
